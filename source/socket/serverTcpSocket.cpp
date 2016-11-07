@@ -70,8 +70,7 @@ namespace spider
 				    std::cout << "header size" << length << std::endl;
 				    _packet.setData(_data, length);
 				    Test pkg = _packet.getData<Test>();
-				    std::cout << "pkg = " << pkg.cmd[0] << pkg.cmd[1]
-					      << pkg.cmd[2]  << std::endl;
+				    _packet.printPacketType();
 				    std::cout << "msg = " << pkg.str << std::endl;
 				    readHeader();
 				  }

@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sun Nov  6 12:54:32 2016 Gandoulf
-// Last update Mon Nov  7 15:08:25 2016 Gandoulf
+// Last update Mon Nov  7 15:46:39 2016 Gandoulf
 //
 
 #ifndef PACKETSERILIZER_HPP_

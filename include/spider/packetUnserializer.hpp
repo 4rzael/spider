@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Mon Nov  7 10:00:25 2016 Gandoulf
-// Last update Mon Nov  7 14:40:48 2016 Gandoulf
+// Last update Mon Nov  7 15:55:01 2016 Gandoulf
 //
 
 #ifndef PACKETUNSERIALIZER_HPP_
@@ -20,7 +20,9 @@ namespace spider
   class PacketUnserializer
   {
   public:
-    PacketUnserializer() {}
+    PacketUnserializer()
+      : _header(NULL), _data(NULL)
+    {}
     PackageHeader	getHeader()
     {
       return (*(static_cast<PackageHeader *>(static_cast<void *>(_header))));
@@ -29,6 +31,15 @@ namespace spider
     data		getData()
     {
       return (*(static_cast<data *>(static_cast<void *>(_data))));
+    }
+
+    char const *getPacketType()
+    {
+      return (_data);
+    }
+    void printPacketType()
+    {
+      std::cout << _data[0] << _data[1] << _data[2] << std::endl;
     }
 
     //setter
