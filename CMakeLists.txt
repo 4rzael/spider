@@ -4,14 +4,15 @@ cmake_minimum_required (VERSION 2.8)
 project (cpp_spider)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+set (SPIDER_SOURCE "${CMAKE_SOURCE_DIR}/source")
 
 set(SPIDER_SRC "")
-set(SPIDER_INCLUDE_DIR "")
+set(SPIDER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 set(SPIDER_LIB "")
-set(SPIDER_CXX_FLAGS "")
+set(SPIDER_CXX_FLAGS "-g -std=c++11")
 
-include(${CMAKE_SOURCE_DIR}/spider/CMakeLists.txt)
-include(${CMAKE_SOURCE_DIR}/boost/CMakeLists.txt)
+include("${SPIDER_SOURCE}/spider/CMakeLists.txt")
+include("${SPIDER_SOURCE}/socket/CMakeLists.txt")
 
 include_directories(${SPIDER_INCLUDE_DIR})
 
