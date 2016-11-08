@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Mon Nov  7 16:29:54 2016 debrab_t
+// Last update Tue Nov  8 14:31:14 2016 debrab_t
 //
 
 #include "SqlManager.hh"
