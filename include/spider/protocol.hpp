@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 15:44:31 2016 Gandoulf
-// Last update Mon Nov  7 14:32:34 2016 Gandoulf
+// Last update Tue Nov  8 14:15:03 2016 debrab_t
 //
 
 #ifndef PROTOCOL_HPP_
@@ -27,5 +27,73 @@ typedef struct Test
   char	cmd[3];
   char	str[100];
 } Test;
+
+typedef struct PackageCMDIDN
+{
+  char	cmd[3];
+  int	id;
+  char	key[50];
+} PackageCMDIDN;
+
+typedef struct PackageCMDIDNAnswer
+{
+  PackageHeader	header;
+  char		cmd[3];
+  int		id;
+} PackageCMDIDNAnswer;
+
+typedef struct PackageCMDMouseClic
+{
+  char		cmd[3];
+  unsigned int	timestamp;
+  int		x;
+  int		y;
+  char		id[30];
+} PackageCMDMouseClic;
+
+typedef struct PackageCMDMouseMove
+{
+  char		cmd[3];
+  unsigned int	timestamp;
+  int		x;
+  int		y;
+} PackageCMDMouseMove;
+
+typedef struct PackageCMDKeyboardTouch
+{
+  char		cmd[3];
+  unsigned int	timestamp;
+  char		id[30];
+} PackageCMDKeyboardTouch;
+
+typedef struct PackageCMDLogOut
+{
+  char	cmd[3];
+} PackageCMDLogOut;
+
+typedef struct PackageAnswer
+{
+  PackageHeader	header;
+  int		code;
+  char		cmd[3];
+  char		msg[20];
+} PackageAnswer;
+
+typedef struct PackageCMDTime
+{
+  char	cmd[3];
+  int	timer;
+} PackageCMDTime;
+
+typedef struct PackageCMD
+{
+  char	cmd[3];
+} PackageCMD;
+
+typedef struct PackageCMDPING
+{
+  char	cmd[3] ;
+  char	id[20] ;
+} PackageCMDPING;
 
 #endif /* PROTOCOL_HPP_ */
