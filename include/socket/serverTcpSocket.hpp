@@ -5,13 +5,14 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Mon Nov  7 14:24:36 2016 Gandoulf
+// Last update Tue Nov  8 14:06:25 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKET_HPP_
 # define SERVERTCPSOCKET_HPP_
 
 #include "spider/packetUnserializer.hpp"
+#include "bdd_connect/SqlServer.hh"
 
 #include <set>
 #include <memory>
@@ -28,7 +29,8 @@ namespace spider
     class user : public std::enable_shared_from_this<user>
     {
     public:
-      user(boost::asio::ip::tcp::socket socket, std::set<user_ptr> & clients);
+      user(boost::asio::ip::tcp::socket socket, std::set<user_ptr> & clients,
+	   SqlServer &sqlServer);
       void start();
       void close();
 
@@ -41,6 +43,7 @@ namespace spider
       spider::PacketUnserializer	_packet;
       char				_data[128];
       std::set<user_ptr>		&_clients;
+      SqlServer				&_sqlServer;
     };
 
     //class for the server behavior
@@ -57,6 +60,7 @@ namespace spider
       boost::asio::ip::tcp::acceptor	_acceptor;
       boost::asio::ip::tcp::socket	_socket;
       std::set<user_ptr>		_clients;
+      SqlServer				_sqlServer;
     };
   }
 }

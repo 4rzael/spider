@@ -21,8 +21,8 @@ namespace spider
   namespace socket
   {
     //client user
-    user::user(tcp::socket socket, std::set<user_ptr> & clients)
-      : _socket(std::move(socket)), _clients(clients)
+    user::user(tcp::socket socket, std::set<user_ptr> & clients, SqlServer &sqlServer)
+      : _socket(std::move(socket)), _clients(clients), _sqlServer(sqlServer)
     {
     }
 
@@ -48,10 +48,6 @@ namespace spider
 				if (!ec)
 				  {
 				    _packet.setHeader(_data, length);
-				    PackageHeader header = _packet.getHeader();
-				    std::cout << "MAGIC = " << header.magicNumber << std::endl;
-				    std::cout << "size = " << header.size << std::endl;
-				    std::cout << "id = " << header.id << std::endl;
 				    readData();
 				  }
 			      });
@@ -67,11 +63,13 @@ namespace spider
 			      {
 				if (!ec)
 				  {
-				    std::cout << "header size" << length << std::endl;
 				    _packet.setData(_data, length);
-				    Test pkg = _packet.getData<Test>();
 				    _packet.printPacketType();
-				    std::cout << "msg = " << pkg.str << std::endl;
+
+				    /*
+				      bdd fonction
+				    */
+
 				    readHeader();
 				  }
 			      });
@@ -94,9 +92,9 @@ namespace spider
 			     {
 			       if (!ec)
 				 {
-				   std::make_shared<user>(std::move(_socket), _clients)->start();
+				   std::make_shared<user>(std::move(_socket), _clients,
+							  _sqlServer)->start();
 				 }
-
 			       accept();
 			     });
     }
