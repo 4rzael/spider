@@ -14,7 +14,7 @@ namespace spider
 	   tcp::resolver::iterator endpoint)
       : _ioService(io_service), _endpoint(endpoint), _socket(io_service)
     {
-      memset(&msg[0], 0, 128);
+      memset(&_data[0], 0, 128);
     }
 
     void ClientTcpSocket::close()
@@ -29,7 +29,7 @@ namespace spider
 				 {
 				   if (!error) {
 				     std::cout << "connection" << std::endl;
-				     read();
+				     readHeader();
 				   }
 				   else
 				     std::cout << "error in co" << std::endl;
@@ -87,22 +87,33 @@ namespace spider
       _endpoint = endpoint;
     }
 
-    void ClientTcpSocket::read()
+    void ClientTcpSocket::readHeader()
     {
-      boost::asio::async_read(_socket, boost::asio::buffer(msg, 12),
-			      [this](boost::system::error_code error, std::size_t _length)
+      boost::asio::async_read(_socket,
+			      boost::asio::buffer(_data, sizeof(PackageHeader)),
+			      [this](boost::system::error_code ec, std::size_t length)
 			      {
-				std::cout << "length = " << _length << std::endl;
-				//std::cout << msg << std::endl;
-				if (!error)
+				if (!ec)
 				  {
-				    std::cout.write(msg, 5);
-				    std::cout << std::endl;
-				    read();
+				    _packet.setHeader(_data, length);
+				    readData();
 				  }
-				else {
-				  close();
-				}
+			      });
+    }
+
+    void ClientTcpSocket::readData()
+    {
+      boost::asio::async_read(_socket,
+			      boost::asio::buffer(_data,_packet.getHeader().size -
+						  sizeof(PackageHeader)),
+			      [this](boost::system::error_code ec, std::size_t length)
+			      {
+				if (!ec)
+				  {
+				    _packet.setData(_data, length);
+				    _packet.printPacketType();
+				    readHeader();
+				  }
 			      });
     }
 

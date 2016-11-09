@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Mon Nov  7 10:00:25 2016 Gandoulf
-// Last update Mon Nov  7 15:55:01 2016 Gandoulf
+// Last update Wed Nov  9 10:48:04 2016 Gandoulf
 //
 
 #ifndef PACKETUNSERIALIZER_HPP_
@@ -46,11 +46,15 @@ namespace spider
 
     void setHeader(char *header, int size)
     {
+      if (_header != NULL)
+	delete[] _header;
       _header = new char[size];
       std::memcpy(_header, header, size);
     }
     void setData(char *data, int size)
     {
+      if (_data != NULL)
+	delete[] _data;
       _data = new char[size];
       std::memcpy(_data, data, size);
     }
