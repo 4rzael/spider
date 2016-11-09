@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Tue Nov  8 15:29:19 2016 debrab_t
+// Last update Wed Nov  9 14:08:44 2016 debrab_t
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "spider/packetSerializer.hpp"
+#include "spider/packetUnserializer.hpp"
 
 namespace spider
 {
@@ -51,7 +52,8 @@ namespace spider
 
     private:
       void identification();
-      void read();
+      void readHeader();
+      void readData();
       template<class packet>
       void doWrite(spider::PacketSerializer<packet> data)
       {
@@ -81,9 +83,10 @@ namespace spider
       boost::asio::ip::tcp::resolver::iterator	_endpoint;
       int					_clientID;
       std::shared_ptr<std::thread>		_runningService;
-      //tmp
-      char					msg[128];
-      int					length;
+
+      //packet
+      spider::PacketUnserializer		_packet;
+      char					_data[128];
     };
   }
 }

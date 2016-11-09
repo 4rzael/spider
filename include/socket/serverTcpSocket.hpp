@@ -5,13 +5,15 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Tue Nov  8 18:34:59 2016 debrab_t
+// Last update Wed Nov  9 14:34:32 2016 debrab_t
 //
 
 #ifndef SERVERTCPSOCKET_HPP_
 # define SERVERTCPSOCKET_HPP_
 
 #include "spider/packetUnserializer.hpp"
+#include "spider/packetSerializer.hpp"
+#include "bdd_connect/SqlManager.hh"
 #include "bdd_connect/SqlServer.hh"
 
 #include <set>
@@ -34,9 +36,36 @@ namespace spider
       void start();
       void close();
 
+      template<class packet>
+      void write(spider::PacketSerializer<packet> data)
+      {
+	doWrite(data);
+      }
+
     private:
       void readHeader();
       void readData();
+      template<class packet>void
+      doWrite(spider::PacketSerializer<packet> data)
+      {
+	char *packet;
+
+	packet = data.getPackedData();
+	boost::asio::async_write(_socket,
+				 boost::asio::buffer(packet, data.getPacketSize()),
+				 [this, packet](boost::system::error_code ec, std::size_t)
+				 {
+				   if (!ec)
+				     {
+				       std::cout << "packet send" << std::endl;
+				     }
+				   else
+				     {
+				       _socket.close();
+				     }
+				   delete[] packet;
+				 });packet = data.getPackedData();
+      }
 
     private:
       boost::asio::ip::tcp::socket	_socket;

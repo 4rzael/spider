@@ -5,10 +5,12 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Wed Oct 26 16:26:19 2016 debrab_t
-// Last update Tue Nov  8 14:07:20 2016 Gandoulf
+// Last update Wed Nov  9 14:35:10 2016 debrab_t
 //
 
 #include "bdd_connect/SqlManager.hh"
+#include <string>
+#include <iostream>
 
 SqlManager::SqlManager(const std::string &connect)
 {

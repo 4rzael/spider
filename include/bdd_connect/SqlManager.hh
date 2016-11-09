@@ -5,11 +5,12 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Wed Oct 26 16:26:01 2016 debrab_t
-// Last update Mon Nov  7 11:09:14 2016 debrab_t
+// Last update Wed Nov  9 14:35:13 2016 debrab_t
 //
 
-#include <string>
-#include <iostream>
+#ifndef SQLLINK_HH_
+# define SQLLINK_HH_
+
 #include <pqxx/pqxx>
 #include <map>
 #include <vector>
@@ -35,3 +36,5 @@ private:
   pqxx::connection	*cInfo;
   pqxx::work		*wInfo;
 };
+
+#endif /* SQLLINK_HH_ */

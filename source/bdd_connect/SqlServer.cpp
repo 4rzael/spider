@@ -5,10 +5,10 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Wed Nov  9 13:56:18 2016 debrab_t
+// Last update Wed Nov  9 16:34:19 2016 debrab_t
 //
 
-#include "bdd_connect/SqlServer.hh"
+#include "socket/serverTcpSocket.hpp"
 
 SqlServer::SqlServer()
 {
@@ -33,8 +33,7 @@ void	SqlServer::createServTab()
   sqlMan.createTable("CLIENT",
 		     "ID  SERIAL PRIMARY KEY,"		\
 		     "ID_CLIENT	INT NOT NULL,"		\
-		     "PUBLICKEY TEXT NOT NULL,"		\
-		     "STATE	BOOLEAN NOT NULL");
+		     "PUBLICKEY TEXT NOT NULL");
   sqlMan.createTable("MOUSE_MOUVEMENT",
 		     "ID  SERIAL PRIMARY KEY,"		      \
 		     "ID_CLIENT INT NOT NULL,"		      \
@@ -57,13 +56,21 @@ void	SqlServer::createServTab()
 void		SqlServer::addClient(spider::PacketUnserializer &packet)
 {
   PackageCMDIDN	idn;
+  std::string	data;
+  pqxx::result	reqResult;
 
   idn = packet.getData<PackageCMDIDN>();
-
-  std::cout << "addClient" << std::endl;
+  data = std::to_string(idn.id) + ", " + "'" + std::string(idn.key) + "'";
+  std::cout << "addClient--->" << data << std::endl;
+  reqResult= sqlMan.selectData("id_client", "client where id_client=" + std::to_string(idn.id));
+  /*  if ()
+  for (pqxx::result::const_iterator c = r.begin(); c != r.end(); ++c)
+    {
+      std::cout << "ID = " << c[0] << std::endl;
+      }*/
   sqlMan.insertData("CLIENT",
-		    "ID_CLIENT, PUBLICKEY, STATE",
-		    "1, 'publickey test', TRUE");
+		    "ID_CLIENT, PUBLICKEY",
+		    data);
 }
 
 void	SqlServer::addMouseMouvement(spider::PacketUnserializer &packet)
@@ -110,8 +117,19 @@ void	SqlServer::disconnectClient(spider::PacketUnserializer &packet)
 
 }
 
-bool		SqlServer::putIntoBdd(spider::PacketUnserializer &packet)
+bool		SqlServer::putIntoBdd(spider::PacketUnserializer &packet,
+				      std::shared_ptr<spider::socket::user> user)
 {
+  /*
+  Test msg;
+  memset(&msg.str[0], 0, 100);
+  std::strncpy(msg.cmd, "tst", 3);
+  spider::PacketSerializer<Test> _packet(sizeof(PackageHeader) + sizeof(Test), 1999888256, msg);
+
+  user->write<Test>(_packet);
+  */
+
+
   /*
     TODO
     les structures sont-elles verifié ?
@@ -122,16 +140,12 @@ bool		SqlServer::putIntoBdd(spider::PacketUnserializer &packet)
     - write les réponses de retour (add user remplir le packageAnswer avec la cmd)
     - verifier les const dans les methodes
     - mettre les cliens à STATE = FALSE quand ils sont déconnecté si le serveur se quite
+    - creer database s'il elle n'existe pas
   */
-  if (std::strlen(packet.getPacketType()) > 3)
+  std::string	stringPacket(packet.getPacketType(), 0, 3);
+  if (_pointMap.find(stringPacket) != _pointMap.end())
     {
-      std::string	stringPacket(packet.getPacketType(), 0, 3);
-      if (_pointMap.find(stringPacket) != _pointMap.end())
-	{
-	  ((*this).*_pointMap.find(stringPacket)->second)(packet);
-	}
-      else
-	return (false);
+      ((*this).*_pointMap.find(stringPacket)->second)(packet);
     }
   return (true);
 }

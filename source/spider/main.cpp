@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Mon Nov  7 15:05:16 2016 Gandoulf
+// Last update Wed Nov  9 15:33:15 2016 debrab_t
 //
 
 #include "socket/clientTcpSocket.hpp"
@@ -54,12 +54,12 @@ int	main(int ac, char **av)
 	while (std::cin.getline(line, 128 + 1)) {
 	  if (!std::strncmp(line, "quit", 4))
 	    break;
-	  Test msg;
-	  memset(&msg.str[0], 0, 100);
-	  std::strncpy(msg.cmd, "tst", 3);
-	  std::memcpy(msg.str, line, strlen(line));
-	  spider::PacketSerializer<Test> packet(sizeof(PackageHeader) + sizeof(Test), 1999888256, msg);
-	  c.write<Test>(packet);
+	  PackageCMDIDN msg;
+	  memset(&msg.key[0], 0, 100);
+	  std::strncpy(msg.cmd, "idn", 3);
+	  std::memcpy(msg.key, line, strlen(line));
+	  spider::PacketSerializer<PackageCMDIDN> packet(sizeof(PackageHeader) + sizeof(PackageCMDIDN), 1999888256, msg);
+	  c.write<PackageCMDIDN>(packet);
 	}
 	c.close();
 	c.closeService();
