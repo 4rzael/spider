@@ -5,10 +5,11 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Tue Nov  8 14:06:52 2016 Gandoulf
+// Last update Wed Nov  9 11:52:55 2016 debrab_t
 //
 
 #include "bdd_connect/SqlManager.hh"
+#include "spider/packetUnserializer.hpp"
 
 class SqlServer
 {
@@ -17,12 +18,17 @@ public:
   ~SqlServer();
   bool	dbConnect(std::string const &);
   void	createServTab();
-  void	addClient();
-  void	addMouseMouvement();
-  void	addMouseClick();
-  void	addKeyboardString();
+  void	addClient(spider::PacketUnserializer &);
+  void	addMouseMouvement(spider::PacketUnserializer &);
+  void	addMouseClick(spider::PacketUnserializer &);
+  void	addKeyboardString(spider::PacketUnserializer &);
+  void	disconnectClient(spider::PacketUnserializer &);
+  bool	putIntoBdd(spider::PacketUnserializer &);
+  void	feedPointMap();
 
 private:
   SqlManager	sqlMan;
   int		clientId;
+  typedef void	(SqlServer::*bddFunc)(spider::PacketUnserializer &);
+  std::map<std::string, bddFunc> _pointMap;
 };

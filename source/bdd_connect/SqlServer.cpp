@@ -5,13 +5,16 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Tue Nov  8 14:07:30 2016 Gandoulf
+// Last update Wed Nov  9 13:56:18 2016 debrab_t
 //
 
 #include "bdd_connect/SqlServer.hh"
 
 SqlServer::SqlServer()
 {
+  feedPointMap();
+  dbConnect("dbname=postgres user=postgres password=abcd hostaddr=127.0.0.1 port=5432");
+  createServTab();
 }
 
 SqlServer::~SqlServer()
@@ -28,51 +31,107 @@ bool	SqlServer::dbConnect(std::string const &con)
 void	SqlServer::createServTab()
 {
   sqlMan.createTable("CLIENT",
-		  "ID  SERIAL PRIMARY KEY,"	\
-		  "PUBLICKEY TEXT NOT NULL");
+		     "ID  SERIAL PRIMARY KEY,"		\
+		     "ID_CLIENT	INT NOT NULL,"		\
+		     "PUBLICKEY TEXT NOT NULL,"		\
+		     "STATE	BOOLEAN NOT NULL");
   sqlMan.createTable("MOUSE_MOUVEMENT",
-		  "ID  SERIAL PRIMARY KEY,"		      \
-		  "ID_CLIENT INT NOT NULL,"		      \
-		  "TIMESTAMP TEXT NOT NULL,"		      \
-		  "X INT NOT NULL,"			      \
-		  "Y INT NOT NULL");
+		     "ID  SERIAL PRIMARY KEY,"		      \
+		     "ID_CLIENT INT NOT NULL,"		      \
+		     "TIMESTAMP TEXT NOT NULL,"		      \
+		     "X INT NOT NULL,"			      \
+		     "Y INT NOT NULL");
   sqlMan.createTable("MOUSE_CLICK",
-		  "ID  SERIAL PRIMARY KEY,"		      \
-		  "ID_CLIENT INT NOT NULL,"		      \
-		  "TIMESTAMP TEXT NOT NULL,"		      \
-		  "X INT NOT NULL,"			      \
-		  "Y INT NOT NULL,"			      \
-		  "ID_CLICK INT NOT NULL");
+		     "ID  SERIAL PRIMARY KEY,"		      \
+		     "ID_CLIENT INT NOT NULL,"		      \
+		     "TIMESTAMP TEXT NOT NULL,"		      \
+		     "X INT NOT NULL,"			      \
+		     "Y INT NOT NULL,"			      \
+		     "ID_CLICK INT NOT NULL");
   sqlMan.createTable("KEYBOARD_STRING",
-		  "ID  SERIAL PRIMARY KEY,"	\
-		  "ID_CLIENT INT NOT NULL,"	\
-		  "STRING TEXT NOT NULL");
+		     "ID  SERIAL PRIMARY KEY,"	\
+		     "ID_CLIENT INT NOT NULL,"	\
+		     "STRING TEXT NOT NULL");
 }
 
-void	SqlServer::addClient()
+void		SqlServer::addClient(spider::PacketUnserializer &packet)
 {
+  PackageCMDIDN	idn;
+
+  idn = packet.getData<PackageCMDIDN>();
+
+  std::cout << "addClient" << std::endl;
   sqlMan.insertData("CLIENT",
-		    "PUBLICKEY",
-		    "'publickey test'");
+		    "ID_CLIENT, PUBLICKEY, STATE",
+		    "1, 'publickey test', TRUE");
 }
 
-void	SqlServer::addMouseMouvement()
+void	SqlServer::addMouseMouvement(spider::PacketUnserializer &packet)
 {
+  PackageCMDMouseMove	mvt;
+
+  mvt = packet.getData<PackageCMDMouseMove>();
   sqlMan.insertData("MOUSE_MOUVEMENT",
 		    "ID_CLIENT, TIMESTAMP, X, Y",
 		    "1, 'timestamp test', 8, 2");
 }
 
-void	SqlServer::addMouseClick()
+void	SqlServer::addMouseClick(spider::PacketUnserializer &packet)
 {
+  PackageCMDMouseClic clc;
+
+  clc = packet.getData<PackageCMDMouseClic>();
   sqlMan.insertData("MOUSE_CLICK",
 		    "ID_CLIENT, TIMESTAMP, X, Y, ID_CLICK",
 		    "1, 'timestamp test', 8, 2, 3");
 }
 
-void	SqlServer::addKeyboardString()
+void	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
 {
+  PackageCMDKeyboardTouch	toc;
+
+  toc = packet.getData<PackageCMDKeyboardTouch>();
   sqlMan.insertData("KEYBOARD_STRING",
 		    "ID_CLIENT, STRING",
 		    "1, 'string test'");
+}
+
+void	SqlServer::feedPointMap()
+{
+  _pointMap.insert(std::pair<std::string,bddFunc>("idn", &SqlServer::addClient));
+  _pointMap.insert(std::pair<std::string,bddFunc>("clc", &SqlServer::addMouseClick));
+  _pointMap.insert(std::pair<std::string,bddFunc>("mvt", &SqlServer::addMouseMouvement));
+  _pointMap.insert(std::pair<std::string,bddFunc>("toc", &SqlServer::addKeyboardString));
+  _pointMap.insert(std::pair<std::string,bddFunc>("dec",  &SqlServer::disconnectClient));
+}
+
+void	SqlServer::disconnectClient(spider::PacketUnserializer &packet)
+{
+
+}
+
+bool		SqlServer::putIntoBdd(spider::PacketUnserializer &packet)
+{
+  /*
+    TODO
+    les structures sont-elles verifié ?
+
+    - connection initialisation
+    - methode disconnect client
+    - verifier à chaque fois que l'id existe (return false si non)
+    - write les réponses de retour (add user remplir le packageAnswer avec la cmd)
+    - verifier les const dans les methodes
+    - mettre les cliens à STATE = FALSE quand ils sont déconnecté si le serveur se quite
+  */
+  if (std::strlen(packet.getPacketType()) > 3)
+    {
+      std::string	stringPacket(packet.getPacketType(), 0, 3);
+      if (_pointMap.find(stringPacket) != _pointMap.end())
+	{
+	  ((*this).*_pointMap.find(stringPacket)->second)(packet);
+	}
+      else
+	return (false);
+    }
+  return (true);
 }

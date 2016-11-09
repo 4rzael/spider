@@ -65,11 +65,8 @@ namespace spider
 				  {
 				    _packet.setData(_data, length);
 				    _packet.printPacketType();
-
-				    /*
-				      bdd fonction
-				    */
-
+				    if (!_sqlServer.putIntoBdd(_packet))
+				      close();
 				    readHeader();
 				  }
 			      });

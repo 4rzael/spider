@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Mon Nov  7 15:15:00 2016 Gandoulf
+// Last update Tue Nov  8 15:29:19 2016 debrab_t
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -13,6 +13,8 @@
 
 #include <thread>
 #include <boost/asio.hpp>
+#include <string>
+#include <iostream>
 
 #include "spider/packetSerializer.hpp"
 
