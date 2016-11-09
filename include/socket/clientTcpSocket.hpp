@@ -5,12 +5,13 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Wed Nov  9 13:47:59 2016 Gandoulf
+// Last update Wed Nov  9 16:29:04 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
 # define CLIENTTCPSOCKET_HPP_
 
+#include <list>
 #include <thread>
 #include <boost/asio.hpp>
 
@@ -33,10 +34,10 @@ namespace spider
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
-	_ioService.post([this, data]()
-			{
-			  doWrite(data);
-			});
+	_messages.push_back(data.getPackedData());
+	_messagesSize.push_back(data.getPacketSize());
+	if (!_writing)
+	  doWrite();
       }
 
       // methode to manage the service
@@ -52,26 +53,28 @@ namespace spider
       void identification();
       void readHeader();
       void readData();
-      template<class packet>
-      void doWrite(spider::PacketSerializer<packet> data)
+      void doWrite()
       {
-	//spider::packedData packet;
-	char *packet;
-
-	packet = data.getPackedData();
+	_writing = true;
         boost::asio::async_write(_socket,
-				 boost::asio::buffer(packet, data.getPacketSize()),
-				 [this, packet](boost::system::error_code ec, std::size_t)
+				 boost::asio::buffer(_messages.front().get(),
+						     _messagesSize.front()),
+				 [this](boost::system::error_code ec, std::size_t)
 				 {
 				   if (!ec)
 				     {
 				       std::cout << "packet send" << std::endl;
+				       _messages.pop_front();
+				       _messagesSize.pop_front();
+				       if (!_messages.empty())
+					 doWrite();
+				       else
+					 _writing = false;
 				     }
 				   else
 				     {
 				       _socket.close();
 				     }
-				   delete[] packet;
 				 });
       }
 
@@ -83,6 +86,9 @@ namespace spider
       std::shared_ptr<std::thread>		_runningService;
 
       //packet
+      std::list<spider::packedData>		_messages;
+      std::list<int>				_messagesSize;
+      bool					_writing;
       spider::PacketUnserializer		_packet;
       char					_data[128];
     };

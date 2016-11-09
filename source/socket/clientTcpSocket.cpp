@@ -1,3 +1,13 @@
+//
+// clientTcpSocket.cpp for  in /home/gandoulf/epitech/cpp_spider/source/socket
+//
+// Made by Gandoulf
+// Login   <gandoulf@epitech.net>
+//
+// Started on  Wed Nov  9 15:32:04 2016 Gandoulf
+// Last update Wed Nov  9 15:50:56 2016 Gandoulf
+//
+
 #include <cstdlib>
 #include <iostream>
 
@@ -12,7 +22,7 @@ namespace spider
   {
     ClientTcpSocket::ClientTcpSocket(boost::asio::io_service& io_service,
 	   tcp::resolver::iterator endpoint)
-      : _ioService(io_service), _endpoint(endpoint), _socket(io_service)
+      : _ioService(io_service), _endpoint(endpoint), _socket(io_service), _writing(false)
     {
       memset(&_data[0], 0, 128);
     }

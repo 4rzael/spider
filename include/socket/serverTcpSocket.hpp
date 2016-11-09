@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Wed Nov  9 13:36:49 2016 Gandoulf
+// Last update Wed Nov  9 16:29:11 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKET_HPP_
@@ -38,40 +38,51 @@ namespace spider
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
-	doWrite(data);
+	_messages.push_back(data.getPackedData());
+	_messagesSize.push_back(data.getPacketSize());
+	if (!_writing)
+	  doWrite();
       }
 
     private:
       void readHeader();
       void readData();
-      template<class packet>void
-      doWrite(spider::PacketSerializer<packet> data)
+      void doWrite()
       {
-	char *packet;
-
-	packet = data.getPackedData();
+	_writing = true;
 	boost::asio::async_write(_socket,
-				 boost::asio::buffer(packet, data.getPacketSize()),
-				 [this, packet](boost::system::error_code ec, std::size_t)
+				 boost::asio::buffer(_messages.front().get(),
+						     _messagesSize.front()),
+				 [this](boost::system::error_code ec, std::size_t)
 				 {
 				   if (!ec)
 				     {
 				       std::cout << "packet send" << std::endl;
+				       _messages.pop_front();
+				       _messagesSize.pop_front();
+				       if (!_messages.empty())
+					 doWrite();
+				       else
+					 _writing = false;
 				     }
 				   else
 				     {
 				       _socket.close();
 				     }
-				   delete[] packet;
-				 });packet = data.getPackedData();
+				 });
       }
 
     private:
       boost::asio::ip::tcp::socket	_socket;
-      spider::PacketUnserializer	_packet;
-      char				_data[128];
       std::set<user_ptr>		&_clients;
       SqlServer				&_sqlServer;
+
+      //packet
+      std::list<spider::packedData>	_messages;
+      std::list<int>			_messagesSize;
+      bool				_writing;
+      spider::PacketUnserializer	_packet;
+      char				_data[128];
     };
 
     //class for the server behavior

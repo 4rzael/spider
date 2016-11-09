@@ -1,11 +1,11 @@
 //
-// chat_server.cpp
-// ~~~~~~~~~~~~~~~
+// serverTcpSocket.cpp for  in /home/gandoulf/epitech/cpp_spider/source/socket
 //
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Made by Gandoulf
+// Login   <gandoulf@epitech.net>
 //
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Started on  Wed Nov  9 15:31:50 2016 Gandoulf
+// Last update Wed Nov  9 16:26:24 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -22,7 +22,7 @@ namespace spider
   {
     //client user
     user::user(tcp::socket socket, std::set<user_ptr> & clients, SqlServer &sqlServer)
-      : _socket(std::move(socket)), _clients(clients), _sqlServer(sqlServer)
+      : _socket(std::move(socket)), _clients(clients), _sqlServer(sqlServer), _writing(false)
     {
     }
 
