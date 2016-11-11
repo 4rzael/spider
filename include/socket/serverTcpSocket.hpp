@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Wed Nov  9 16:29:11 2016 Gandoulf
+// Last update Fri Nov 11 15:45:27 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKET_HPP_
@@ -18,6 +18,7 @@
 #include <set>
 #include <memory>
 #include <boost/asio.hpp>
+#include <thread>
 
 namespace spider
 {
@@ -91,13 +92,24 @@ namespace spider
     public:
       ServerTcpSocket(boost::asio::io_service& io_service,
 	     const boost::asio::ip::tcp::endpoint& endpoint);
+      void close();
+      void startService();
+      void closeService();
+
+      template<class packet>
+      void write(spider::PacketSerializer<packet> data)
+      {
+	return;
+      }
 
     private:
       void accept();
 
     private:
+      boost::asio::io_service &		_ioService;
       boost::asio::ip::tcp::acceptor	_acceptor;
       boost::asio::ip::tcp::socket	_socket;
+      std::shared_ptr<std::thread>	_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;
     };

@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Mon Nov  7 15:05:16 2016 Gandoulf
+// Last update Fri Nov 11 15:17:58 2016 Gandoulf
 //
 
 #include "socket/clientTcpSocket.hpp"
@@ -27,13 +27,18 @@ int	main(int ac, char **av)
     {
       try {
 	boost::asio::io_service io_service;
-
-	std::list<ServerTcpSocket> servers;
-	for (int i = 1; i < ac; ++i) {
-	  tcp::endpoint endpoint(tcp::v4(), std::atoi(av[i]));
-	  servers.emplace_back(io_service, endpoint);
+	tcp::endpoint endpoint(tcp::v4(), std::atoi(av[1]));
+	ServerTcpSocket server(io_service, endpoint);
+	server.startService();
+	char line[128 + 1];
+	while (std::cin.getline(line, 128 + 1)) {
+	  if (!std::strncmp(line, "quit", 4))
+	    {
+	      server.close();
+	      break;
+	    }
 	}
-	io_service.run();
+	server.closeService();
       }
       catch (std::exception& e) {
 	std::cerr << "Exception: " << e.what() << "\n";

@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Wed Nov  9 16:29:04 2016 Gandoulf
+// Last update Fri Nov 11 14:48:04 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -53,30 +53,7 @@ namespace spider
       void identification();
       void readHeader();
       void readData();
-      void doWrite()
-      {
-	_writing = true;
-        boost::asio::async_write(_socket,
-				 boost::asio::buffer(_messages.front().get(),
-						     _messagesSize.front()),
-				 [this](boost::system::error_code ec, std::size_t)
-				 {
-				   if (!ec)
-				     {
-				       std::cout << "packet send" << std::endl;
-				       _messages.pop_front();
-				       _messagesSize.pop_front();
-				       if (!_messages.empty())
-					 doWrite();
-				       else
-					 _writing = false;
-				     }
-				   else
-				     {
-				       _socket.close();
-				     }
-				 });
-      }
+      void doWrite();
 
     private:
       boost::asio::io_service &			_ioService;
