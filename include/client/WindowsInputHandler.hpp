@@ -6,6 +6,8 @@
 # include <Windows.h>
 # include "socket/socketC/clientTcpSocketC.hpp"
 
+# define RANDOM_ID 666
+
 extern spider::socket::ClientTcpSocket sock;
 
 namespace spider

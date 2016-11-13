@@ -39,7 +39,7 @@ namespace spider
       return (_header);
     }
 
-    char *getData()
+    char *getDataC()
     {
       return (_data);
     }
