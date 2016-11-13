@@ -11,6 +11,10 @@
 #ifndef CLIENTTCPSOCKET_HPP_
 # define CLIENTTCPSOCKET_HPP_
 
+//#ifdef _WIN32
+//#include <winsock2.h>
+//#endif
+
 #include <list>
 #include <mutex>
 

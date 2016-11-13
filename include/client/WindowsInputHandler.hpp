@@ -4,6 +4,9 @@
 # define WINDOWS_INPUT_HANDLER_HPP_
 
 # include <Windows.h>
+# include "socket/socketC/clientTcpSocketC.hpp"
+
+extern spider::socket::ClientTcpSocket tutu;
 
 namespace spider
 {
