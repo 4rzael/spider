@@ -13,9 +13,11 @@
 
 #include "Network/sockets/Client.hpp"
 
+#ifdef _WIN32
 extern "C" {
 	#include <openssl/applink.c>
 }
+#endif
 
 namespace Socket
 {
@@ -91,8 +93,10 @@ namespace Socket
 
     if (connect(_fd, (SOCKADDR *)&addr, sizeof(addr)) < 0)
     {
+#ifdef _WIN32
       if (WSAGetLastError() != WSAEINPROGRESS)
         throw SocketConnectError("client : " + std::string(strerror(getError())));
+#endif
     }
 
     SSL_set_fd(_ssl, _fd);
