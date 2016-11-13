@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Fri Nov 11 14:47:58 2016 Gandoulf
+// Last update Sat Nov 12 18:12:30 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -131,13 +131,14 @@ namespace spider
     {
       _writing = true;
       boost::asio::async_write(_socket,
-			       boost::asio::buffer(_messages.front().get(),
+			       boost::asio::buffer(_messages.front(),
 						   _messagesSize.front()),
 			       [this](boost::system::error_code ec, std::size_t)
 			       {
 				 if (!ec)
 				   {
 				     std::cout << "packet send" << std::endl;
+				     _delete[] messages.front();
 				     _messages.pop_front();
 				     _messagesSize.pop_front();
 				     if (!_messages.empty())

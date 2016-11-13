@@ -5,8 +5,10 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Wed Oct 26 16:26:01 2016 debrab_t
-// Last update Mon Nov  7 11:09:14 2016 debrab_t
+// Last update Sat Nov 12 12:43:02 2016 Gandoulf
 //
+#ifndef SQLMANAGER_HH_
+# define SQLMANAGER_HH_
 
 #include <string>
 #include <iostream>
@@ -35,3 +37,5 @@ private:
   pqxx::connection	*cInfo;
   pqxx::work		*wInfo;
 };
+
+#endif /* SQLMANAGER_HH_ */

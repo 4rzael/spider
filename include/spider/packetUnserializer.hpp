@@ -5,12 +5,13 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Mon Nov  7 10:00:25 2016 Gandoulf
-// Last update Wed Nov  9 10:48:04 2016 Gandoulf
+// Last update Sat Nov 12 12:40:33 2016 Gandoulf
 //
 
 #ifndef PACKETUNSERIALIZER_HPP_
 # define PACKETUNSERIALIZER_HPP_
 
+#include <iostream>
 #include <cstring>
 #include <memory>
 #include "spider/protocol.hpp"
