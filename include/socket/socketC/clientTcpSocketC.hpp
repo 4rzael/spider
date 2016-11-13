@@ -5,18 +5,18 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Sat Nov 12 18:11:49 2016 Gandoulf
+// Last update Sun Nov 13 11:03:26 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
 # define CLIENTTCPSOCKET_HPP_
 
 #include <list>
-#include <thread>
-#include <boost/asio.hpp>
+#include <mutex>
 
 #include "spider/packetSerializer.hpp"
 #include "spider/packetUnserializer.hpp"
+#include "Network/sockets/Client.hpp"
 
 namespace spider
 {
@@ -25,8 +25,7 @@ namespace spider
     class ClientTcpSocket
     {
     public:
-      ClientTcpSocket(boost::asio::io_service& io_service,
-	     boost::asio::ip::tcp::resolver::iterator endpoint);
+      ClientTcpSocket(std::string adresse, int port);
 
       //methode to use the socket
       void connect(); // connect to the server
@@ -34,10 +33,10 @@ namespace spider
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
+	_Mqueue.lock();
 	_messages.push_back(data.getPackedData(1));
 	_messagesSize.push_back(data.getPacketSize());
-	if (!_writing)
-	  doWrite();
+	_Mqueue.unlock();
       }
 
       // methode to manage the service
@@ -47,7 +46,7 @@ namespace spider
 
       //setter
       void setClientID(int id);
-      void setEndPoint(boost::asio::ip::tcp::resolver::iterator const &endpoint);
+      void setServer(std::string adresse, int port);
 
     private:
       void identification();
@@ -56,18 +55,18 @@ namespace spider
       void doWrite();
 
     private:
-      boost::asio::io_service &			_ioService;
-      boost::asio::ip::tcp::socket		_socket;
-      boost::asio::ip::tcp::resolver::iterator	_endpoint;
+      Socket::Client				_client;
+      std::string				_adresse;
+      int					_port;
       int					_clientID;
-      std::shared_ptr<std::thread>		_runningService;
+      bool					_runningService;
 
       //packet
       std::list<char *>				_messages;
       std::list<int>				_messagesSize;
-      bool					_writing;
       spider::PacketUnserializer		_packet;
       char					_data[128];
+      std::mutex				_Mqueue;
     };
   }
 }

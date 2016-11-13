@@ -5,20 +5,21 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sat Nov 12 18:14:27 2016 Gandoulf
+// Last update Sat Nov 12 14:53:12 2016 Gandoulf
 //
 
-#ifndef SERVERTCPSOCKET_HPP_
-# define SERVERTCPSOCKET_HPP_
+#ifndef SERVERTCPSOCKETC_HPP_
+# define SERVERTCPSOCKETC_HPP_
 
 #include "spider/packetUnserializer.hpp"
 #include "spider/packetSerializer.hpp"
 #include "bdd_connect/SqlServer.hh"
+#include "Network/sockets/Server.hpp"
 
 #include <set>
 #include <memory>
-#include <boost/asio.hpp>
 #include <thread>
+#include <map>
 
 namespace spider
 {
@@ -31,58 +32,32 @@ namespace spider
     class user : public std::enable_shared_from_this<user>
     {
     public:
-      user(boost::asio::ip::tcp::socket socket, std::set<user_ptr> & clients,
-	   SqlServer &sqlServer);
-      void start();
+      user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer, int fd);
+      user_ptr start();
       void close();
+      void read();
 
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
 	_messages.push_back(data.getPackedData(1));
 	_messagesSize.push_back(data.getPacketSize());
-	if (!_writing)
-	  doWrite();
       }
+      void doWrite();
 
     private:
       void readHeader();
       void readData();
-      void doWrite()
-      {
-	_writing = true;
-	boost::asio::async_write(_socket,
-				 boost::asio::buffer(_messages.front(),
-						     _messagesSize.front()),
-				 [this](boost::system::error_code ec, std::size_t)
-				 {
-				   if (!ec)
-				     {
-				       std::cout << "packet send" << std::endl;
-				       delete[] _messages.front();
-				       _messages.pop_front();
-				       _messagesSize.pop_front();
-				       if (!_messages.empty())
-					 doWrite();
-				       else
-					 _writing = false;
-				     }
-				   else
-				     {
-				       _socket.close();
-				     }
-				 });
-      }
 
     private:
-      boost::asio::ip::tcp::socket	_socket;
+      Socket::Server			&_server;
+      int				_fd;
       std::set<user_ptr>		&_clients;
       SqlServer				&_sqlServer;
 
       //packet
-      std::list<char *>		x	_messages;
+      std::list<char *>			_messages;
       std::list<int>			_messagesSize;
-      bool				_writing;
       spider::PacketUnserializer	_packet;
       char				_data[128];
     };
@@ -91,8 +66,7 @@ namespace spider
     class ServerTcpSocket
     {
     public:
-      ServerTcpSocket(boost::asio::io_service& io_service,
-	     const boost::asio::ip::tcp::endpoint& endpoint);
+      ServerTcpSocket(int port, size_t maxClient = 1000);
       void close();
       void startService();
       void closeService();
@@ -105,17 +79,20 @@ namespace spider
       }
 
     private:
-      void accept();
+      user_ptr accept(int fd);
 
     private:
-      boost::asio::io_service &		_ioService;
-      boost::asio::ip::tcp::acceptor	_acceptor;
-      boost::asio::ip::tcp::socket	_socket;
-      std::shared_ptr<std::thread>	_runningService;
+      Socket::Server			_server;
+      std::map<int, user_ptr>		_clientsFD;
+      bool				_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;
+
+      //server
+      int				_port;
+      size_t				_maxClient;
     };
   }
 }
 
-#endif /* SERVERTCPSOCKET_HPP_ */
+#endif /* SERVERTCPSOCKETC_HPP_ */
