@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <algorithm>
+#include <utility>
 
 #ifndef _WIN32
 # include <sys/select.h>
@@ -124,22 +125,22 @@ namespace Socket
 
 	size_t  Server::getMaxClients() const { return _maxClients; }
 
-	void  Server::OnConnect(std::function < void (Socket::Server &, Server_Client &) > const &callback)
+	void  Server::OnConnect(std::function < void (Socket::Server &, int) > const &callback)
 	{
 		_OnConnect = callback;
 	}
 
-	void  Server::OnDisconnect(std::function < void (Socket::Server &, Server_Client &) > const &callback)
+	void  Server::OnDisconnect(std::function < void (Socket::Server &, int) > const &callback)
 	{
 		_OnDisconnect = callback;
 	}
 
-	void  Server::OnReadPossible(std::function < void (Socket::Server &, Server_Client &, size_t) > const &callback)
+	void  Server::OnReadPossible(std::function < void (Socket::Server &, int, size_t) > const &callback)
 	{
 		_OnReadPossible = callback;
 	}
 
-	void  Server::OnWritePossible(std::function < void (Socket::Server &, Server_Client &) > const &callback)
+	void  Server::OnWritePossible(std::function < void (Socket::Server &, int) > const &callback)
 	{
 		_OnWritePossible = callback;
 	}
@@ -149,34 +150,50 @@ namespace Socket
 		_OnStart = callback;
 	}
 
-	void  Server::disconnect(Server_Client &c)
+	void  Server::disconnect(int fd)
 	{
-		auto found = std::find(_clients.begin(), _clients.end(), c);
 
+		if (!isConnected(fd))
+		{
+			return ;
+		}
+
+		auto found = _clients.find(fd);
 		if (found != std::end(_clients))
 		{
 			_clients.erase(found);
-			closesocket(c.fd);
-			FD_CLR(c.fd, &_fd_set);
+			closesocket(fd);
+			FD_CLR(fd, &_fd_set);
 
 			auto max = (std::max_element(_clients.begin(), _clients.end(), 
-				[](Server_Client const &first, Server_Client const &second) {
-					return first.fd < second.fd;
+				[]( std::pair<int, Server_Client> const &first,
+					std::pair<int, Server_Client> const &second) {
+					return std::get<1>(first).fd < std::get<1>(second).fd;
 				}));
 			if (max != _clients.end())
-				_max_fd = (*max).fd;
-			else
+				_max_fd = std::get<1>(*max).fd;
+			else {
+				FD_ZERO(&_fd_set);
 				_max_fd = _fd;
+				FD_SET(_fd, &_fd_set);
+			}
 
 			if (_OnDisconnect)
-				_OnDisconnect(*this, c);
+				_OnDisconnect(*this, fd);
 		}
 	}
 
-	int  Server::read(Server_Client &c, void *buffer, size_t size)
+	int  Server::read(int fd, void *buffer, size_t size)
 	{
+
+		if (!isConnected(fd))
+			return 0;
+
+		Server_Client &c = getClientByFd(fd);
+
 		// read from the SSL socket
-		prefetch_data(c);
+		prefetch_data(fd);
+
 
 		if (c.internal_read_buffer.empty())
 			return 0;
@@ -197,8 +214,13 @@ namespace Socket
 		return cpy_size;
 	}
 
-	int  Server::write(Server_Client &c, void const *buffer, size_t size)
+	int  Server::write(int fd, void const *buffer, size_t size)
 	{
+
+		if (!isConnected(fd))
+			return 0;
+
+		Server_Client &c = getClientByFd(fd);
 
 		int tmp = 0;
 		size_t s = 0;
@@ -213,14 +235,20 @@ namespace Socket
 				SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_WRITE)
 				return s;
 			else
-				disconnect(c);
+				disconnect(fd);
 		}
 
 		return s;
 	}
 
-	void Server::prefetch_data(Server_Client &c)
+	void Server::prefetch_data(int fd)
 	{
+
+		if (!isConnected(fd))
+			return ;
+
+		Server_Client &c = getClientByFd(fd);
+
 		int tmp = 0;
 		char buffer[4096];
 
@@ -243,18 +271,26 @@ namespace Socket
 				return ;
 			// error
 			else
-				disconnect(c);
+				disconnect(fd);
 		}
 	}
 
-	size_t Server::bytesAvailables(Server_Client &c)
+	size_t Server::bytesAvailables(int fd)
 	{
-		prefetch_data(c);
+
+		if (!isConnected(fd))
+			return 0;
+
+		prefetch_data(fd);
+
+		Server_Client &c = getClientByFd(fd);
+
 		return c.internal_read_buffer.size();
 	}
 
 	void Server::initSSL()
 	{
+
 		const SSL_METHOD  *method;
 
 		SSL_library_init();
@@ -284,8 +320,13 @@ namespace Socket
 		}
 	}
 
-	bool Server::connect(Server_Client &c)
+	bool Server::makeHandshake(int fd)
 	{
+		if (!isConnected(fd))
+			return false;
+
+		Server_Client &c = getClientByFd(fd);
+
 		if (!c.ssl)
 		{
 			c.ssl = SSL_new(_ctx);
@@ -296,9 +337,9 @@ namespace Socket
 			int err = SSL_accept(c.ssl);
 			if (err > 0)
 			{
-				c.connected = true;
+				c.connected = true; // SSL authentified
 				if (_OnConnect)
-					_OnConnect(*this, c);
+					_OnConnect(*this, fd);
 				return true;
 			}
 			else
@@ -307,14 +348,22 @@ namespace Socket
 		}
 	}
 
-	bool Server::isConnected(Server_Client &c) const
+	bool Server::isConnected(int fd) const
 	{
-		auto found = std::find(_clients.begin(), _clients.end(), c);
-		return found != std::end(_clients);
+
+		auto found = _clients.find(fd);
+		return found != _clients.end();
+	}
+
+	Server_Client &Server::getClientByFd(int fd)
+	{
+
+		return _clients.at(fd);
 	}
 
 	void Server::stateChecker()
 	{
+
 		SOCKET fd;
 		int nb_fd;
 		fd_set read_set, write_set;
@@ -324,8 +373,12 @@ namespace Socket
 		while (_isRunning)
 		{
 			SLEEPMS(_granularity);
+			FD_SET(_fd, &_fd_set);
 			memcpy(&read_set, &_fd_set, sizeof(_fd_set));
 			memcpy(&write_set, &_fd_set, sizeof(_fd_set));
+
+			for (auto c = _clients.begin(); c != _clients.end(); ++c) {
+			}
 
 			// wait for an event
 			timeout = _timeout;
@@ -344,8 +397,8 @@ namespace Socket
 
 					FD_SET(fd, &_fd_set);
 					_max_fd = (fd > _max_fd) ? fd : _max_fd;
-					_clients.push_back(Server_Client(fd));
-					connect(_clients.back());
+					_clients.emplace(fd, Server_Client(fd));
+					makeHandshake(fd);
 				}
 				if (errno != EAGAIN && errno != EWOULDBLOCK)
 					throw SocketConnectError(std::string(strerror(getError())));
@@ -353,41 +406,44 @@ namespace Socket
 
 			for (auto it = _clients.begin(); it != _clients.end() && _clients.size(); ++it)
 			{
+
 				// read event
-				if (FD_ISSET((*it).fd, &read_set))
+				if (FD_ISSET(std::get<1>(*it).fd, &read_set))
 				{
-					if ((*it).fd == _fd);
+					if (std::get<1>(*it).fd == _fd);
 					else
 					{
 						// not SSL connected yet
-						if (!(*it).connected)
-							connect(*it);
+						if (!std::get<1>(*it).connected)
+							makeHandshake(std::get<0>(*it));
 						else
 						{
-							if (!bytesAvailables(*it))
+							if (!bytesAvailables(std::get<0>(*it)))
 							{
-								disconnect(*it);
+								disconnect(std::get<0>(*it));
+								if (_clients.size() == 0)
+									break;
 								it = _clients.begin();
 								continue;
 							}
-							else if (_OnReadPossible && isConnected(*it))
-								_OnReadPossible(*this, *it, bytesAvailables(*it));
+							else if (_OnReadPossible && isConnected(std::get<0>(*it)))
+								_OnReadPossible(*this, std::get<0>(*it), bytesAvailables(std::get<0>(*it)));
 						}
 					}
 				}
 				// write event
-				if (FD_ISSET((*it).fd, &write_set))
+				if (FD_ISSET(std::get<1>(*it).fd, &write_set))
 				{
-					if (*it == _fd);
+					if (std::get<0>(*it) == _fd);
 					else
 					{
 						// not SSL connected yet
-						if (!(*it).connected)
-							connect(*it);
+						if (!std::get<1>(*it).connected)
+							makeHandshake(std::get<0>(*it));
 						else
 						{
-							if (_OnWritePossible && isConnected(*it))
-								_OnWritePossible(*this, *it);
+							if (_OnWritePossible && isConnected(std::get<0>(*it)))
+								_OnWritePossible(*this, std::get<0>(*it));
 						}
 					}
 				}

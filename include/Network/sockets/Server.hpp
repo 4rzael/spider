@@ -15,7 +15,7 @@
 # include <thread>
 # include <atomic>
 # include <sys/time.h>
-# include <vector>
+# include <map>
 
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
@@ -93,42 +93,42 @@ namespace Socket
 
         // called on client connexion
         // param1 : Int : fd of the client socket
-        void  OnConnect(std::function < void (Server &, Server_Client &) > const &callback);
+        void  OnConnect(std::function < void (Server &, int) > const &callback);
         // called on client disconnexion
         // param1 : Int : closed fd of the client socket
-        void  OnDisconnect(std::function < void (Server &, Server_Client &) > const &callback);
+        void  OnDisconnect(std::function < void (Server &, int) > const &callback);
         // called on client read accessibility
         // param1 : Int : fd of the client socket
         // param2 : size_t : size possible to read (can change meanwhile)
-        void  OnReadPossible(std::function < void (Server &, Server_Client &, size_t) > const &callback);
+        void  OnReadPossible(std::function < void (Server &, int, size_t) > const &callback);
         // called on client write accessibility
         // param1 : Int : fd of the client socket
-        void  OnWritePossible(std::function < void (Server &, Server_Client &) > const &callback);
+        void  OnWritePossible(std::function < void (Server &, int) > const &callback);
         // called on server startup
         // param1 : Int : Port of the connexion
         void  OnStart(std::function < void (Server &, int) > const &callback);
 
-        bool isConnected(Server_Client &c) const;
+        bool isConnected(int fd) const;
 
         /* I/O API */
-        void    disconnect(Server_Client &c);
-        int     read(Server_Client &c, void *buffer, size_t size);
-        int     write(Server_Client &c, void const *buffer, size_t size);
-        size_t  bytesAvailables(Server_Client &c);
+        void    disconnect(int fd);
+        int     read(int fd, void *buffer, size_t size);
+        int     write(int fd, void const *buffer, size_t size);
+        size_t  bytesAvailables(int fd);
 
     protected:
         int                                             _port;
         size_t                                          _maxClients;
         SOCKET                                          _fd;
-        std::vector<Server_Client>                      _clients;
+        std::map<int, Server_Client>                    _clients;
         std::thread                                     _stateThread;
         timeval                                         _timeout;
         uint                                            _granularity;
 
-        std::function < void (Server &, Server_Client &) >          _OnConnect;
-        std::function < void (Server &, Server_Client &) >          _OnDisconnect;
-        std::function < void (Server &, Server_Client &, size_t) >  _OnReadPossible;
-        std::function < void (Server &, Server_Client &) >          _OnWritePossible;
+        std::function < void (Server &, int) >          _OnConnect;
+        std::function < void (Server &, int) >          _OnDisconnect;
+        std::function < void (Server &, int, size_t) >  _OnReadPossible;
+        std::function < void (Server &, int) >          _OnWritePossible;
         std::function < void (Server &, int) >          _OnStart;
 
         std::string _certPath;
@@ -137,9 +137,10 @@ namespace Socket
         SSL_CTX           *_ctx;
 
 
-        bool connect(Server_Client &);
-        void onDisconnect(Socket::Server &serv, Socket::Server_Client &c);
-        void prefetch_data(Server_Client &c);
+        Server_Client &getClientByFd(int);
+        bool makeHandshake(int fd);
+        void onDisconnect(Socket::Server &serv, int fd);
+        void prefetch_data(int fd);
 
     private:
         void  stateChecker();
