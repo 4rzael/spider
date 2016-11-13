@@ -14,7 +14,11 @@
 # include <functional>
 # include <thread>
 # include <atomic>
+#ifdef _WIN32
+# include <time.h>
+#else
 # include <sys/time.h>
+#endif
 
 # include "Network/sockets/Sockets.hpp"
 
