@@ -131,6 +131,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\client\ClientSpider.hpp" />
     <ClInclude Include="..\..\include\client\WindowsInputHandler.hpp" />
     <ClInclude Include="..\..\include\Network\sockets\Client.hpp" />
     <ClInclude Include="..\..\include\Network\sockets\SocketErrors.hpp" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="..\Network\sockets\Client.cpp" />
     <ClCompile Include="..\socket\socketC\clientTcpSocketC.cpp" />
+    <ClCompile Include="ClientSpider.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="WindowsInputHandler.cpp" />
   </ItemGroup>

@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sun Nov 13 20:27:48 2016 Gandoulf
+// Last update Sun Nov 13 20:33:45 2016 Gandoulf
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -15,8 +15,8 @@ namespace spider
   namespace socket
   {
     user::user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
-	       int fd, std::mutex & Mclients)
-      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(fd), _Mclients(Mclients),
+	       Socket::Server_Client &c, std::mutex & Mclients)
+      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(c), _Mclients(Mclients),
 	_firstRead(true)
     {
     }
@@ -115,13 +115,13 @@ namespace spider
       : _port(port), _maxClient(maxClient)
     {
       _runningService = false;
-      _server.OnConnect([this](Socket::Server & server, int fd)
+      _server.OnConnect([this](Socket::Server & server, Socket::Server_Client &fd)
 		       {
 			 user_ptr newClients;
 			 newClients = accept(fd);
-			 _clientsFD.insert(std::pair<int,user_ptr>(fd, newClients));
+			 _clientsFD.insert(std::pair<Socket::Server_Client &,user_ptr>(fd, newClients));
 		       });
-      _server.OnDisconnect([this](Socket::Server & server, int fd)
+      _server.OnDisconnect([this](Socket::Server & server, Socket::Server_Client &fd)
 			  {
 			    if (_clientsFD.size() == 0)
 			      return ;
@@ -129,13 +129,13 @@ namespace spider
 			    auto deconnectedClient = _clientsFD.find(fd);
 			    _clientsFD.erase(deconnectedClient);
 			  });
-      _server.OnReadPossible([this](Socket::Server & server, int fd, size_t length)
+      _server.OnReadPossible([this](Socket::Server & server, Socket::Server_Client &fd, size_t length)
 			    {
 			      if (_clientsFD.size() == 0)
 				return ;
 			      _clientsFD[fd].get()->read(length);
 			    });
-      _server.OnWritePossible([this](Socket::Server & server, int fd)
+      _server.OnWritePossible([this](Socket::Server & server, Socket::Server_Client &fd)
 			     {
 			       if (_clientsFD.size() == 0)
 				 return ;
@@ -155,8 +155,6 @@ namespace spider
 	  _runningService = false;
 	  _server.stop();
 	  _Mclients.lock();
-	  //for (auto it = _clients.begin(); it != _clients.end(); ++it)
-	  //(*it).get()->disconnect();
 	  _clients.clear();
 	  _Mclients.unlock();
 	  _clientsFD.clear();
@@ -182,7 +180,7 @@ namespace spider
       close();
     }
 
-    user_ptr ServerTcpSocket::accept(int fd)
+    user_ptr ServerTcpSocket::accept(Socket::Server_Client &fd)
     {
       return (std::make_shared<user>(_server, _clients, _sqlServer, fd, _Mclients)->start());
     }

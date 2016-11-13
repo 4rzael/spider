@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sun Nov 13 18:36:51 2016 Gandoulf
+// Last update Sun Nov 13 20:30:50 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKETC_HPP_
@@ -33,7 +33,7 @@ namespace spider
     {
     public:
       user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
-	   int fd, std::mutex & Mclients);
+	   Socket::Server_Client &c, std::mutex & Mclients);
       user_ptr start();
       void disconnect();
       void close();
@@ -55,8 +55,8 @@ namespace spider
 
     private:
       Socket::Server			&_server;
-      int				_fd;
       bool				_firstRead;
+      Socket::Server_Client		&_fd;
       std::set<user_ptr>		&_clients;
       SqlServer				&_sqlServer;
       std::mutex			&_Mclients;
@@ -86,11 +86,11 @@ namespace spider
       }
 
     private:
-      user_ptr accept(int fd);
+      user_ptr accept(Socket::Server_Client &c);
 
     private:
       Socket::Server			_server;
-      std::map<int, user_ptr>		_clientsFD;
+      std::map<Socket::Server_Client, user_ptr>		_clientsFD;
       bool				_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;

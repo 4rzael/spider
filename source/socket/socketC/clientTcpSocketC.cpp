@@ -55,6 +55,21 @@ namespace spider
 			   });
     }
 
+	ClientTcpSocket::~ClientTcpSocket()
+	{
+		char *tmp;
+		while (tmp = _rdQ.front())
+		{
+			delete[] tmp;
+			_rdQ.pop();
+		}
+
+		for (auto it = _messages.begin(); it != _messages.end(); ++it)
+		{
+			delete[] * it;
+		}
+	}
+
     void ClientTcpSocket::close()
     {
       if (_runningService)
@@ -134,6 +149,10 @@ namespace spider
       std::memcpy(msg, _packet.getHeaderC(), sizeof(PackageHeader));
       std::memcpy(msg + sizeof(PackageHeader), _packet.getDataC(), _packet.getHeader().size -
 		  sizeof(PackageHeader));
+
+	  _mtxQ.lock();
+	  _rdQ.push(msg);
+	  _mtxQ.unlock();
     }
 
     void ClientTcpSocket::doWrite()
@@ -152,5 +171,15 @@ namespace spider
 	}
       _Mqueue.unlock();
     }
+
+	std::mutex *ClientTcpSocket::getQMtx()
+	{
+		return &_mtxQ;
+	}
+
+	std::queue<char *>& ClientTcpSocket::getRdQ()
+	{
+		return _rdQ;
+	}
   }
 }

@@ -17,6 +17,7 @@
 
 #include <list>
 #include <mutex>
+#include <queue>
 
 namespace spider
 {
@@ -26,6 +27,7 @@ namespace spider
     {
     public:
       ClientTcpSocket(std::string adresse, int port);
+	  ~ClientTcpSocket();
 
       //methode to use the socket
       void connect(); // connect to the server
@@ -48,6 +50,9 @@ namespace spider
       void setClientID(int id);
       void setServer(std::string adresse, int port);
 
+	  std::mutex *getQMtx();
+	  std::queue<char *> &getRdQ();
+
     private:
       void identification();
       void readHeader();
@@ -68,6 +73,8 @@ namespace spider
       spider::PacketUnserializer		_packet;
       char					_data[128];
       std::mutex				_Mqueue;
+	  std::mutex _mtxQ;
+	  std::queue<char *> _rdQ;
     };
   }
 }
