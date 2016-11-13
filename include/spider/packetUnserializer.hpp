@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Mon Nov  7 10:00:25 2016 Gandoulf
-// Last update Sat Nov 12 12:40:33 2016 Gandoulf
+// Last update Sun Nov 13 16:45:55 2016 Gandoulf
 //
 
 #ifndef PACKETUNSERIALIZER_HPP_
@@ -32,6 +32,16 @@ namespace spider
     data		getData()
     {
       return (*(static_cast<data *>(static_cast<void *>(_data))));
+    }
+
+    char *getHeaderC()
+    {
+      return (_header);
+    }
+
+    char *getData()
+    {
+      return (_data);
     }
 
     char const *getPacketType()
