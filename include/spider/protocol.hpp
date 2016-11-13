@@ -95,6 +95,14 @@ typedef struct PackageAnswer
 }) PackageAnswer;
 
 PACK(
+typedef struct PackageAnswer2
+{
+	int		code;
+	char	cmd[3];
+	char	msg[20];
+}) PackageAnswer2;
+
+PACK(
 typedef struct PackageCMDTime
 {
   char	cmd[3];

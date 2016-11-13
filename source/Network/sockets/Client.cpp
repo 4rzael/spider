@@ -1,7 +1,10 @@
 #include <errno.h>
 #include <algorithm>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#pragma comment (lib, "ws2_32.lib")
+# include <winsock2.h>
+#else
 # include <sys/select.h>
 #endif
 
@@ -9,6 +12,10 @@
 #include <fcntl.h>
 
 #include "Network/sockets/Client.hpp"
+
+extern "C" {
+	#include <openssl/applink.c>
+}
 
 namespace Socket
 {
@@ -84,7 +91,7 @@ namespace Socket
 
     if (connect(_fd, (SOCKADDR *)&addr, sizeof(addr)) < 0)
     {
-      if (errno != EINPROGRESS)
+      if (WSAGetLastError() != WSAEINPROGRESS)
         throw SocketConnectError("client : " + std::string(strerror(getError())));
     }
 
@@ -121,7 +128,11 @@ namespace Socket
       _stateThread.join();
 
     SSL_free(_ssl);
+#ifdef _WIN32
+	closesocket(_fd);
+#else
     close(_fd);
+#endif
     SSL_CTX_free(_ctx);
   }
 

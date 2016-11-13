@@ -10,8 +10,10 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 #include "socket/socketC/clientTcpSocketC.hpp"
+#include "spider/PacketUnserializer.hpp"
 
 namespace spider
 {
@@ -53,6 +55,8 @@ namespace spider
 			     _messagesSize.clear();
 			     _Mqueue.unlock();
 			   });
+
+	  mainThreadId = GetCurrentThreadId();
     }
 
 	ClientTcpSocket::~ClientTcpSocket()
@@ -150,9 +154,30 @@ namespace spider
       std::memcpy(msg + sizeof(PackageHeader), _packet.getDataC(), _packet.getHeader().size -
 		  sizeof(PackageHeader));
 
-	  _mtxQ.lock();
-	  _rdQ.push(msg);
-	  _mtxQ.unlock();
+	  PacketUnserializer *unz = new PacketUnserializer();
+	  unz->setHeader(msg, sizeof(PackageHeader));
+	  unz->setData(msg + sizeof(PackageHeader), unz->getHeader().size - sizeof(PackageHeader));
+	  
+	  if (!strncmp(unz->getPacketType(), "SHU", 3))
+	  {
+		  PostThreadMessage(mainThreadId, WM_NULL, 0, (LPARAM)new std::string("SHU"));
+	  }
+	  else if (!strncmp(unz->getPacketType(), "TAL", 3))
+	  {
+		  PostThreadMessage(mainThreadId, WM_NULL, 0, (LPARAM)new std::string("TAL"));
+	  }
+	  else if (!strncmp(unz->getPacketType(), "DEC", 3))
+	  {
+		  PostThreadMessage(mainThreadId, WM_NULL, 0, (LPARAM)new std::string("DEC"));
+	  }
+	  else
+		  return;
+
+	  //Test test = unz->getData<Test>();
+
+	  //if (!PostThreadMessage(mainThreadId, WM_NULL, 0, (LPARAM)test.str))
+		 // std::cout << "POST MESSAGE FAILED" << std::endl;
+	  SLEEPMS(1);
     }
 
     void ClientTcpSocket::doWrite()
