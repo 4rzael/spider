@@ -11,10 +11,20 @@
 #ifndef CLIENT_HPP_
 # define CLIENT_HPP_
 
+#ifdef _WIN32
+#pragma comment (lib, "libssl.lib")
+#pragma comment (lib, "libcrypto.lib")
+#endif
+
 # include <functional>
 # include <thread>
 # include <atomic>
+
+#ifdef _WIN32
+#include <time.h>
+#else
 # include <sys/time.h>
+#endif
 # include <vector>
 
 #include <openssl/bio.h>
@@ -44,8 +54,8 @@ namespace Socket
         float   getTimeout() const;
 
     // set the event loop granularity in MS (default 1MS)
-        void    setGranularity(uint g) {_granularity = g;}
-        uint    getGranularity() const {return _granularity;}
+        void    setGranularity(unsigned int g) {_granularity = g;}
+        unsigned int    getGranularity() const {return _granularity;}
 
     /* CALLBACKS API */
     // param0 : *this
@@ -73,7 +83,7 @@ namespace Socket
         SOCKET      _fd;
         std::thread _stateThread;
         timeval     _timeout;
-        uint        _granularity;
+        unsigned int        _granularity;
         bool        _connected;
 
         std::function < void (Client &) >                           _OnConnect;
