@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Sun Nov 13 23:18:03 2016 debrab_t
+// Last update Sun Nov 13 23:38:23 2016 debrab_t
 //
 
 /*
@@ -13,8 +13,6 @@
 
   - appeler close quand un client ce deconnect du serv
   - tester le truc juste au dessus
-  - reponse des clickmouse, key...
-  - reponse sizeof(PackageHeader) + sizeof(PackageAnswer) ?
 */
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -255,8 +253,6 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
   std::string		id_client;
 
   std::cout << "--->DEC<---" << std::endl;
-  if (stringPacket.compare("DEC") != 0)
-    return (true);
   dec = packet.getData<PackageCMDLogOut>();
   hea = packet.getHeader();
   if (hea.magicNumber != SEND)
@@ -268,7 +264,7 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
   if (isClient(id_client) && isClientState(id_client))
     {
       std::cout << "--->disconnect with id:" << id_client << std::endl;
-      sqlMan.updateData("client", "state = FALSE WHERE CLIENT_ID=" + id_client);
+      sqlMan.updateData("client", "state = FALSE WHERE ID_CLIENT=" + id_client);
       hea.magicNumber = REC;
       ans.header = hea;
       ans.code = 208;

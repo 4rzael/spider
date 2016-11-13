@@ -17,7 +17,11 @@ namespace spider
 		template<class packet>
 		void write(spider::PacketSerializer<packet> data)
 		{
-
+			if (_currentFileSize + data.getSize() < _fileMaxSize)
+			{
+				_currentFile.write(data.getPackedData(1), data.getSize());
+				_currentFileSize += data.getSize();
+			}
 		}
 		char *read();
 
@@ -28,7 +32,7 @@ namespace spider
 		void getRandomAscii();
 
 	private:
-		std::ifstream			_currentFile;
+		std::fstream			_currentFile;
 		bool					_writeMode;
 		std::list<std::string>	_file;
 		size_t					_currentFileSize

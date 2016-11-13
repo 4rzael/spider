@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Wed Oct 26 16:26:19 2016 debrab_t
-// Last update Sun Nov 13 00:04:23 2016 debrab_t
+// Last update Sun Nov 13 23:25:03 2016 debrab_t
 //
 
 #include "bdd_connect/SqlManager.hh"
@@ -105,7 +105,6 @@ void		SqlManager::insertData(const std::string &tableName,
     {
       l_work.exec(sql);
       l_work.commit();
-      std::cout << "Record created successfully" << std::endl;
     }
   catch (const std::exception &e)
     {
@@ -125,7 +124,6 @@ void		SqlManager::updateData(const std::string &tableName,
     {
       l_work.exec( sql );
       l_work.commit();
-      std::cout << "Records updated successfully" << std::endl;
     }
   catch (const std::exception &e)
     {
@@ -145,7 +143,6 @@ void		SqlManager::removeData(const std::string &tableName,
     {
       l_work.exec( sql );
       l_work.commit();
-      std::cout << "Records deleted successfully" << std::endl;
     }
   catch (const std::exception &e)
     {
