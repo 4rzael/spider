@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Sun Nov 13 19:25:23 2016 Gandoulf
+// Last update Sun Nov 13 22:26:11 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -14,6 +14,7 @@
 #include "spider/packetUnserializer.hpp"
 #include "spider/packetSerializer.hpp"
 #include "Network/sockets/Client.hpp"
+#include "keyRegister/keyRegister.hpp"
 
 #include <list>
 #include <mutex>
@@ -27,7 +28,7 @@ namespace spider
     {
     public:
       ClientTcpSocket(std::string adresse, int port);
-	  ~ClientTcpSocket();
+      ~ClientTcpSocket();
 
       //methode to use the socket
       void connect(); // connect to the server
@@ -75,6 +76,8 @@ namespace spider
       std::mutex				_Mqueue;
 	  std::mutex _mtxQ;
 	  std::queue<char *> _rdQ;
+
+      spider::KeyRegister			_keyRegister;
     };
   }
 }

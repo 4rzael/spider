@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Sun Nov 13 20:14:46 2016 Gandoulf
+// Last update Sun Nov 13 22:27:41 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -57,17 +57,17 @@ namespace spider
 
 	ClientTcpSocket::~ClientTcpSocket()
 	{
-		char *tmp;
-		while (tmp = _rdQ.front())
-		{
-			delete[] tmp;
-			_rdQ.pop();
-		}
+	  /*char *tmp;
+	  while (tmp = _rdQ.front())
+	    {
+	      delete[] tmp;
+	      _rdQ.pop();
+	    }
 
-		for (auto it = _messages.begin(); it != _messages.end(); ++it)
-		{
-			delete[] * it;
-		}
+	  for (auto it = _messages.begin(); it != _messages.end(); ++it)
+	    {
+	      delete[] * it;
+	    }*/
 	}
 
     void ClientTcpSocket::close()
@@ -160,11 +160,14 @@ namespace spider
       _Mqueue.lock();
       if (!_messages.empty())
 	{
-	  for (int i = 0; i < _messagesSize.front(); ++i) {
+	  /*for (int i = 0; i < _messagesSize.front(); ++i) {
 	    std::cout << std::hex << (int)(_messages.front()[i]);
 	  }
-	  std::cout << std::dec << std::endl;
-	  _client.write(_messages.front(), _messagesSize.front());
+	  std::cout << std::dec << std::endl;*/
+	  if (_runningService)
+	    _client.write(_messages.front(), _messagesSize.front());
+	  else
+	    _keyRegister.write(_messages.front(), _messagesSize.front());
 	  delete[] _messages.front();
 	  _messages.pop_front();
 	  _messagesSize.pop_front();

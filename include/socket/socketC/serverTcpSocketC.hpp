@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sun Nov 13 20:30:50 2016 Gandoulf
+// Last update Sun Nov 13 20:47:00 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKETC_HPP_
@@ -90,7 +90,7 @@ namespace spider
 
     private:
       Socket::Server			_server;
-      std::map<Socket::Server_Client, user_ptr>		_clientsFD;
+      std::map<Socket::Server_Client , user_ptr>		_clientsFD;
       bool				_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;

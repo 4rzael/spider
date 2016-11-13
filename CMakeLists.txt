@@ -15,6 +15,7 @@ include("${SPIDER_SOURCE}/spider/CMakeLists.txt")
 include("${SPIDER_SOURCE}/socket/CMakeLists.txt")
 include("${SPIDER_SOURCE}/bdd_connect/CMakeLists.txt")
 include("${SPIDER_SOURCE}/Network/CMakeLists.txt")
+include("${SPIDER_SOURCE}/keyRegister/CMakeLists.txt")
 
 include_directories(${SPIDER_INCLUDE_DIR})
 
