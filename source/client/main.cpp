@@ -6,7 +6,7 @@
 //#include "client/WindowsInputHandler.hpp"
 //#include "WindowsLogHandler.hpp"
 //#include "AutoStart.hpp"
-jd
+
 #include "client/ClientSpider.hpp"
 
 spider::socket::ClientTcpSocket sock("10.10.252.37", 7171);
