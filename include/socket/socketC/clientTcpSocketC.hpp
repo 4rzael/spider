@@ -5,22 +5,18 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Sun Nov 13 11:03:26 2016 Gandoulf
+// Last update Sun Nov 13 15:02:35 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
 # define CLIENTTCPSOCKET_HPP_
 
-//#ifdef _WIN32
-//#include <winsock2.h>
-//#endif
+#include "spider/packetUnserializer.hpp"
+#include "spider/packetSerializer.hpp"
+#include "Network/sockets/Client.hpp"
 
 #include <list>
 #include <mutex>
-
-#include "spider/packetSerializer.hpp"
-#include "spider/packetUnserializer.hpp"
-#include "Network/sockets/Client.hpp"
 
 namespace spider
 {
