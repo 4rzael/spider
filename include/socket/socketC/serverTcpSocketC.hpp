@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sun Nov 13 17:56:23 2016 Gandoulf
+// Last update Sun Nov 13 18:36:51 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKETC_HPP_
@@ -37,7 +37,7 @@ namespace spider
       user_ptr start();
       void disconnect();
       void close();
-      void read();
+      void read(size_t length);
 
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
@@ -56,6 +56,7 @@ namespace spider
     private:
       Socket::Server			&_server;
       int				_fd;
+      bool				_firstRead;
       std::set<user_ptr>		&_clients;
       SqlServer				&_sqlServer;
       std::mutex			&_Mclients;

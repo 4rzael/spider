@@ -5,7 +5,7 @@
 // Login   <agor_m@epitech.net>
 //
 // Started on  Mon May  2 15:20:47 2016 Maxime Agor
-// Last update Sun Jun  5 18:54:05 2016 Maxime Agor
+// Last update Sun Nov 13 20:01:40 2016 Gandoulf
 //
 
 #ifndef CLIENT_HPP_
@@ -54,6 +54,7 @@ namespace Socket
 
 
     /* I/O API */
+    void disconnect();
     int     read(void *buffer, size_t size);
     int     write(void const *buffer, size_t size);
     size_t  bytesAvailables() const;
@@ -73,7 +74,6 @@ namespace Socket
 
   private:
     void  stateChecker();
-    void disconnect();
     fd_set						_fd_set;
     std::atomic<bool>					_isRunning;
   };

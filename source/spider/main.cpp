@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Sat Nov 12 17:59:44 2016 Gandoulf
+// Last update Sun Nov 13 19:39:19 2016 Gandoulf
 //
 
 //#include "socket/clientTcpSocket.hpp"
@@ -55,7 +55,7 @@ int	main(int ac, char **av)
       try {
 	ClientTcpSocket c(std::string(av[1]), atoi(av[2]));
 	c.connect();
-	c.startService();
+	//c.startService();
 
 	char line[128 + 1];
 	while (std::cin.getline(line, 128 + 1)) {

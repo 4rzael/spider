@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Sun Nov 13 15:02:35 2016 Gandoulf
+// Last update Sun Nov 13 19:25:23 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -60,6 +60,7 @@ namespace spider
       int					_port;
       int					_clientID;
       bool					_runningService;
+      bool					_firstRead;
 
       //packet
       std::list<char *>				_messages;
