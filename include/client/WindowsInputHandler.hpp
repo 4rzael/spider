@@ -6,7 +6,7 @@
 # include <Windows.h>
 # include "socket/socketC/clientTcpSocketC.hpp"
 
-extern spider::socket::ClientTcpSocket tutu;
+extern spider::socket::ClientTcpSocket sock;
 
 namespace spider
 {
