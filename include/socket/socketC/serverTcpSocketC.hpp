@@ -33,7 +33,7 @@ namespace spider
     {
     public:
       user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
-	   int fd, std::mutex & Mclients);
+	   Socket::Server_Client &c, std::mutex & Mclients);
       user_ptr start();
       void close();
       void read();
@@ -54,7 +54,9 @@ namespace spider
 
     private:
       Socket::Server			&_server;
-      int				_fd;
+    public:
+      Socket::Server_Client				&_fd;
+    private:
       std::set<user_ptr>		&_clients;
       SqlServer				&_sqlServer;
       std::mutex			&_Mclients;
@@ -84,11 +86,11 @@ namespace spider
       }
 
     private:
-      user_ptr accept(int fd);
+      user_ptr accept(Socket::Server_Client &c);
 
     private:
       Socket::Server			_server;
-      std::map<int, user_ptr>		_clientsFD;
+      std::map<Socket::Server_Client, user_ptr>		_clientsFD;
       bool				_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;

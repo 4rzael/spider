@@ -113,7 +113,7 @@ namespace spider
       char *msg;
       msg = new char[_packet.getHeader().size];
       std::memcpy(msg, _packet.getHeaderC(), sizeof(PackageHeader));
-      std::memcpy(msg + sizeof(PackageHeader), _packet.getDataC(), _packet.getHeader().size -
+      std::memcpy(msg + sizeof(PackageHeader), _packet.getData(), _packet.getHeader().size -
 		  sizeof(PackageHeader));
     }
 

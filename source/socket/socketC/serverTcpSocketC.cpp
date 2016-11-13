@@ -15,8 +15,8 @@ namespace spider
   namespace socket
   {
     user::user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
-	       int fd, std::mutex & Mclients)
-      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(fd), _Mclients(Mclients)
+	       Socket::Server_Client &c, std::mutex & Mclients)
+      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(c), _Mclients(Mclients)
     {
     }
 
@@ -31,7 +31,7 @@ namespace spider
 
     void user::close()
     {
-      if (_fd != 0)
+      if (_fd.fd != 0)
 	{
 	  std::cout << "disconnection" << std ::endl;
 	  _server.disconnect(_fd);
@@ -89,23 +89,23 @@ namespace spider
       : _port(port), _maxClient(maxClient)
     {
       _runningService = false;
-      _server.OnConnect([this](Socket::Server & server, int fd)
+      _server.OnConnect([this](Socket::Server & server, Socket::Server_Client &fd)
 		       {
 			 user_ptr newClients;
 			 newClients = accept(fd);
-			 _clientsFD.insert(std::pair<int,user_ptr>(fd, newClients));
+			 _clientsFD.insert(std::pair<Socket::Server_Client &,user_ptr>(fd, newClients));
 		       });
-      _server.OnDisconnect([this](Socket::Server & server, int fd)
+      _server.OnDisconnect([this](Socket::Server & server, Socket::Server_Client &fd)
 			  {
 			    _clientsFD[fd].get()->close();
 			    auto deconnectedClient = _clientsFD.find(fd);
 			    _clientsFD.erase(deconnectedClient);
 			  });
-      _server.OnReadPossible([this](Socket::Server & server, int fd, size_t length)
+      _server.OnReadPossible([this](Socket::Server & server, Socket::Server_Client &fd, size_t length)
 			    {
 			      _clientsFD[fd].get()->read();
 			    });
-      _server.OnWritePossible([this](Socket::Server & server, int fd)
+      _server.OnWritePossible([this](Socket::Server & server, Socket::Server_Client &fd)
 			     {
 			       _clientsFD[fd].get()->doWrite();
 			     });
@@ -148,7 +148,7 @@ namespace spider
       close();
     }
 
-    user_ptr ServerTcpSocket::accept(int fd)
+    user_ptr ServerTcpSocket::accept(Socket::Server_Client &fd)
     {
       return (std::make_shared<user>(_server, _clients, _sqlServer, fd, _Mclients)->start());
     }
