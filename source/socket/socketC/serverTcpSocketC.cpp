@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sat Nov 12 17:53:18 2016 Gandoulf
+// Last update Sun Nov 13 11:38:56 2016 Gandoulf
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -14,14 +14,17 @@ namespace spider
 {
   namespace socket
   {
-    user::user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer, int fd)
-      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(fd)
+    user::user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
+	       int fd, std::mutex & Mclients)
+      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(fd), _Mclients(Mclients)
     {
     }
 
     user_ptr user::start()
     {
+      _Mclients.lock();
       _clients.insert(shared_from_this());
+      _Mclients.unlock();
       return (shared_from_this());
     }
 
@@ -29,7 +32,9 @@ namespace spider
     {
       std::cout << "disconnection" << std ::endl;
       _server.disconnect(_fd);
+      _Mclients.lock();
       _clients.erase(shared_from_this());
+      _Mclients.unlock();
     }
 
     void user::read()
@@ -39,6 +44,7 @@ namespace spider
 
     void user::doWrite()
     {
+      _Mqueue.lock();
       if (!_messages.empty())
 	{
 	  _server.write(_fd, _messages.front(), _messagesSize.front());
@@ -46,6 +52,7 @@ namespace spider
 	  _messages.pop_front();
 	  _messagesSize.pop_front();
 	}
+      _Mqueue.unlock();
     }
 
     //private
@@ -110,7 +117,9 @@ namespace spider
 	  std::cout << "closing" << std::endl;
 	  _runningService = false;
 	  _server.stop();
+	  _Mclients.lock();
 	  _clients.clear();
+	  _Mclients.unlock();
 	  _clientsFD.clear();
 	}
       else
@@ -136,7 +145,7 @@ namespace spider
 
     user_ptr ServerTcpSocket::accept(int fd)
     {
-      return (std::make_shared<user>(_server, _clients, _sqlServer, fd)->start());
+      return (std::make_shared<user>(_server, _clients, _sqlServer, fd, _Mclients)->start());
     }
   }
 }
