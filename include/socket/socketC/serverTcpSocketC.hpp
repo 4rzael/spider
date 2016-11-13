@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sun Nov 13 16:59:42 2016 Gandoulf
+// Last update Sun Nov 13 17:56:23 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKETC_HPP_

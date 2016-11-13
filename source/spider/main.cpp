@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Sun Nov 13 17:47:54 2016 debrab_t
+// Last update Sun Nov 13 18:36:59 2016 debrab_t
 //
 
 //#include "socket/clientTcpSocket.hpp"
@@ -61,7 +61,7 @@ int	main(int ac, char **av)
 	// Connect client
 	    PackageCMDIDN msg1;
 	    memset(&msg1.key[0], 0, 100);
-	    std::strncpy(msg1.cmd, "idn", 3);
+	    std::strncpy(msg1.cmd, "IDN", 3);
 	    std::memcpy(msg1.key, line, strlen(line));
 	    spider::PacketSerializer<PackageCMDIDN> packet1(sizeof(PackageHeader) + sizeof(PackageCMDIDN), 4, msg1);
 	    c.write<PackageCMDIDN>(packet1);
@@ -83,7 +83,7 @@ int	main(int ac, char **av)
 	  memset(&msg.id[0], 0, 50);
 	  std::memcpy(msg.id, line, strlen(line));
 	  msg.timestamp = 5;
-	  std::strncpy(msg.cmd, "toc", 3);
+	  std::strncpy(msg.cmd, "TOC", 3);
 	  //std::memcpy(msg.key, line, strlen(line));
 	  spider::PacketSerializer<PackageCMDKeyboardTouch> packet2(sizeof(PackageHeader) + sizeof(PackageCMDKeyboardTouch), 4, msg);
 	  c.write<PackageCMDKeyboardTouch>(packet2);
