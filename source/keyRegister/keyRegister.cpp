@@ -15,6 +15,8 @@ char *KeyRegister::read()
 	char *messages;
 	int size;
 
+	if (!_currrentFile.is_open())
+		return (NULL);
 	_currrentFile.seekg (0, is.end);
 	size = is.tellg();
 	_currrentFile.seekg (0, is.beg);
