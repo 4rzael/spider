@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sat Nov 12 14:53:12 2016 Gandoulf
+// Last update Sun Nov 13 11:27:02 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKETC_HPP_
@@ -18,8 +18,8 @@
 
 #include <set>
 #include <memory>
-#include <thread>
 #include <map>
+#include <mutex>
 
 namespace spider
 {
@@ -32,7 +32,8 @@ namespace spider
     class user : public std::enable_shared_from_this<user>
     {
     public:
-      user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer, int fd);
+      user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
+	   int fd, std::mutex & Mclients);
       user_ptr start();
       void close();
       void read();
@@ -40,8 +41,10 @@ namespace spider
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
+	_Mqueue.lock();
 	_messages.push_back(data.getPackedData(1));
 	_messagesSize.push_back(data.getPacketSize());
+	_Mqueue.unlock();
       }
       void doWrite();
 
@@ -54,12 +57,14 @@ namespace spider
       int				_fd;
       std::set<user_ptr>		&_clients;
       SqlServer				&_sqlServer;
+      std::mutex			&_Mclients;
 
       //packet
       std::list<char *>			_messages;
       std::list<int>			_messagesSize;
       spider::PacketUnserializer	_packet;
       char				_data[128];
+      std::mutex			_Mqueue;
     };
 
     //class for the server behavior
@@ -87,6 +92,7 @@ namespace spider
       bool				_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;
+      std::mutex			_Mclients;
 
       //server
       int				_port;
