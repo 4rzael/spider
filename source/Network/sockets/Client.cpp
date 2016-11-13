@@ -30,8 +30,10 @@ namespace Socket
   {
 #ifdef _WIN32
     u_long mode = 1;
-    if ((ioctlsocket(sock, FIONBIO, &mode)) == -1)
-      return false;
+	if ((ioctlsocket(sock, FIONBIO, &mode)) == -1)
+	{
+		return false;
+	}
 #else
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) == -1)
       return false;
@@ -86,8 +88,10 @@ namespace Socket
 
     if (connect(_fd, (SOCKADDR *)&addr, sizeof(addr)) < 0)
       {
-	if (errno != EINPROGRESS)
-	  throw SocketConnectError("client : " + std::string(strerror(getError())));
+		if (WSAGetLastError() != WSAEWOULDBLOCK)
+		{
+			throw SocketConnectError("client : " + std::string(strerror(getError())));
+		}
       }
 
     // create select() sets

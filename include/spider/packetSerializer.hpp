@@ -24,7 +24,7 @@ namespace spider
   class PacketSerializer
   {
   public:
-    PacketSerializer(int size, int id, data data_)
+    PacketSerializer(unsigned long long size, int id, data data_)
     {
       _packaheHeader.magicNumber = SEND;
       _packaheHeader.size = size;

