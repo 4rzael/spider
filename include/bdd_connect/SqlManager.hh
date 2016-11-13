@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Wed Oct 26 16:26:01 2016 debrab_t
-// Last update Wed Nov  9 14:35:13 2016 debrab_t
+// Last update Sun Nov 13 00:04:47 2016 debrab_t
 //
 
 #ifndef SQLLINK_HH_
@@ -22,15 +22,15 @@ public:
   SqlManager();
   ~SqlManager();
   bool	connect(const std::string &connect);
-  void	createTable(const std::string &, const std::string &);
+  void	createTable(const std::string &, const std::string &) const;
   void	insertData(const std::string &tableName,
 		   const std::string &rowsName,
-		   const std::string &rowsRec);
-  void	updateData(const std::string &tableName, const std::string &condition);
-  void	removeData(const std::string &tableName, const std::string &condition);
+		   const std::string &rowsRec) const;
+  void	updateData(const std::string &tableName, const std::string &condition) const;
+  void	removeData(const std::string &tableName, const std::string &condition) const;
   pqxx::result	selectData(const std::string &rowsName,
-			   const std::string &fromAndCondition);
-  void	closeManager();
+			   const std::string &fromAndCondition) const;
+  void	closeManager() const;
 
 private:
   pqxx::connection	*cInfo;

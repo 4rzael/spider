@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Wed Oct 26 16:26:19 2016 debrab_t
-// Last update Wed Nov  9 14:35:10 2016 debrab_t
+// Last update Sun Nov 13 00:04:23 2016 debrab_t
 //
 
 #include "bdd_connect/SqlManager.hh"
@@ -61,7 +61,7 @@ bool		SqlManager::connect(const std::string &connect)
     }
 }
 
-void		SqlManager::closeManager()
+void		SqlManager::closeManager() const
 {
   try
     {
@@ -74,8 +74,7 @@ void		SqlManager::closeManager()
     }
 }
 
-void		SqlManager::createTable(const std::string &tableName,
-					const std::string &rows)
+void		SqlManager::createTable(const std::string &tableName, const std::string &rows) const
 {
   std::string	sql;
   pqxx::work	l_work(*cInfo);
@@ -96,7 +95,7 @@ void		SqlManager::createTable(const std::string &tableName,
 
 void		SqlManager::insertData(const std::string &tableName,
 				       const std::string &rowsName,
-				       const std::string &rowsRec)
+				       const std::string &rowsRec) const
 {
   std::string	sql;
   pqxx::work	l_work(*cInfo);
@@ -116,7 +115,7 @@ void		SqlManager::insertData(const std::string &tableName,
 }
 
 void		SqlManager::updateData(const std::string &tableName,
-				       const std::string &condition)
+				       const std::string &condition) const
 {
   std::string	sql;
   pqxx::work	l_work(*cInfo);
@@ -136,7 +135,7 @@ void		SqlManager::updateData(const std::string &tableName,
 }
 
 void		SqlManager::removeData(const std::string &tableName,
-				       const std::string &condition)
+				       const std::string &condition) const
 {
   std::string	sql;
   pqxx::work	l_work(*cInfo);
@@ -156,7 +155,7 @@ void		SqlManager::removeData(const std::string &tableName,
 }
 
 pqxx::result		SqlManager::selectData(const std::string &rowsName,
-					       const std::string &fromAndCondition)
+					       const std::string &fromAndCondition) const
 {
   std::string		sql;
   pqxx::nontransaction	*nonT;

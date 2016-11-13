@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sun Nov  6 12:54:32 2016 Gandoulf
-// Last update Mon Nov  7 15:46:39 2016 Gandoulf
+// Last update Wed Nov  9 16:29:30 2016 Gandoulf
 //
 
 #ifndef PACKETSERILIZER_HPP_
@@ -47,28 +47,16 @@ namespace spider
 
     // working on it
 
-    /*packedData getPackedData()
+    packedData getPackedData()
     {
       packedData package(new char [sizeof(PackageHeader) + _packaheHeader.size]);
-      std::strncpy(package.get(), static_cast<char *>(static_cast<void *>(&_packaheHeader)),
+      std::memcpy(package.get(), static_cast<void *>(&_packaheHeader),
 		   sizeof(PackageHeader));
-      std::strncpy(package.get() + sizeof(PackageHeader),
-		   static_cast<char *>(static_cast<void *>(&_data)),
-		   _packaheHeader.size);
-      return (package);
-      }*/
-
-    char *getPackedData()	// WARNING package return need to be free
-    {
-      char *package = new char [sizeof(PackageHeader) + _packaheHeader.size];
-      std::memcpy(package, static_cast<void *>(&_packaheHeader),
-		  sizeof(PackageHeader));
-      std::memcpy(package + sizeof(PackageHeader),
+      std::memcpy(package.get() + sizeof(PackageHeader),
 		   static_cast<void *>(&_data),
 		  _packaheHeader.size - sizeof(PackageHeader));
-      std::cout << "msg = "<< package + 15 << std::endl;
       return (package);
-    }
+      }
 
   private:
     PackageHeader	_packaheHeader;

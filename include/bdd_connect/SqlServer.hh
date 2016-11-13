@@ -5,13 +5,15 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Wed Nov  9 14:33:05 2016 debrab_t
+// Last update Sun Nov 13 14:13:02 2016 debrab_t
 //
 
 #ifndef SQLSERVER_HH_
 # define SQLSERVER_HH_
 
-#include "socket/serverTcpSocket.hpp"
+# include "socket/serverTcpSocket.hpp"
+# include "bdd_connect/HandleFileServer.hh"
+# include "utils/stringManager.hh"
 
 namespace spider
 {
@@ -28,20 +30,27 @@ public:
   ~SqlServer();
   bool	dbConnect(std::string const &);
   void	createServTab();
-  void	addClient(spider::PacketUnserializer &);
-  void	addMouseMouvement(spider::PacketUnserializer &);
-  void	addMouseClick(spider::PacketUnserializer &);
-  void	addKeyboardString(spider::PacketUnserializer &);
-  void	disconnectClient(spider::PacketUnserializer &);
-  bool	putIntoBdd(spider::PacketUnserializer &,
+  bool	connectClient(spider::PacketUnserializer &);
+  bool	addMouseMouvement(spider::PacketUnserializer &);
+  bool	addMouseClick(spider::PacketUnserializer &);
+  bool	addKeyboardString(spider::PacketUnserializer &);
+  bool	disconnectClient(spider::PacketUnserializer &);
+  bool	response(spider::PacketUnserializer &);
+  bool	handleData(spider::PacketUnserializer &,
 		   std::shared_ptr<spider::socket::user> );
   void	feedPointMap();
+  bool	isClient(const std::string &);
+  bool	isClientState(const std::string &);
+  std::string		insertStringAfterChar(std::string, char, std::string);
 
 private:
-  SqlManager	sqlMan;
-  int		clientId;
-  typedef void	(SqlServer::*bddFunc)(spider::PacketUnserializer &);
+  SqlManager		sqlMan;
+  StringManager		strMan;
+  HandleFileServer	dataToFile;
+  typedef bool	(SqlServer::*bddFunc)(spider::PacketUnserializer &);
   std::map<std::string, bddFunc> _pointMap;
+  std::shared_ptr<spider::socket::user> _user;
+  bool			_cnt;
 };
 
 #endif /* SQLSERVER_HH_ */
