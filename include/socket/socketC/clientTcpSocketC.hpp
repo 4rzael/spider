@@ -15,6 +15,9 @@
 #include "spider/packetSerializer.hpp"
 #include "Network/sockets/Client.hpp"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 #include <list>
 #include <mutex>
 #include <queue>
@@ -74,6 +77,8 @@ namespace spider
       std::mutex				_Mqueue;
 	  std::mutex _mtxQ;
 	  std::queue<char *> _rdQ;
+
+	  DWORD mainThreadId;
     };
   }
 }
