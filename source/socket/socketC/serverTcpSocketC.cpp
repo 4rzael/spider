@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sun Nov 13 16:36:12 2016 Gandoulf
+// Last update Sun Nov 13 16:59:52 2016 Gandoulf
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -29,17 +29,18 @@ namespace spider
       return (shared_from_this());
     }
 
+    void user::disconnect()
+    {
+      _server.disconnect(_fd);
+    }
+
     void user::close()
     {
-      if (_fd != 0)
-	{
-	  std::cout << "disconnection" << std ::endl;
-	  _server.disconnect(_fd);
-	  _Mclients.lock();
-	  _clients.erase(shared_from_this());
-	  _Mclients.unlock();
-	  _fd = 0;
-	}
+      std::cout << "disconnection" << std ::endl;
+      _Mclients.lock();
+      _clients.erase(shared_from_this());
+      _Mclients.unlock();
+      _fd = 0;
     }
 
     void user::read()
