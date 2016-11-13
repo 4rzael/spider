@@ -5,11 +5,13 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Sun Nov 13 14:15:46 2016 debrab_t
+// Last update Sun Nov 13 14:33:38 2016 debrab_t
 //
 
-#include "socket/clientTcpSocket.hpp"
-#include "socket/serverTcpSocket.hpp"
+//#include "socket/clientTcpSocket.hpp"
+//#include "socket/serverTcpSocket.hpp"
+#include "socket/socketC/clientTcpSocketC.hpp"
+#include "socket/socketC/serverTcpSocketC.hpp"
 #include "spider/spider.h"
 
 #include <cstdlib>
@@ -26,14 +28,23 @@ int	main(int ac, char **av)
   if (ac == 2)
     {
       try {
-	boost::asio::io_service io_service;
-
-	std::list<ServerTcpSocket> servers;
-	for (int i = 1; i < ac; ++i) {
-	  tcp::endpoint endpoint(tcp::v4(), std::atoi(av[i]));
-	  servers.emplace_back(io_service, endpoint);
+	ServerTcpSocket server(atoi(av[1]));
+	server.startService();
+	char line[128 + 1];
+	while (std::cin.getline(line, 128 + 1)) {
+	  if (!std::strncmp(line, "quit", 4))
+	    {
+	      server.close();
+	      break;
+	    }
+	  Test msg;
+	  memset(&msg.str[0], 0, 100);
+	  std::strncpy(msg.cmd, "tst", 3);
+	  std::memcpy(msg.str, line, strlen(line));
+	  spider::PacketSerializer<Test> packet(sizeof(PackageHeader) + sizeof(Test), 1999888256, msg);
+	  server.write<Test>(packet);
 	}
-	io_service.run();
+	server.closeService();
       }
       catch (std::exception& e) {
 	std::cerr << "Exception: " << e.what() << "\n";
@@ -42,14 +53,9 @@ int	main(int ac, char **av)
   else if (ac == 3)
     {
       try {
-	boost::asio::io_service io_service;
-	tcp::resolver resolver(io_service);
-	auto endpoint_iterator = resolver.resolve({ av[1], av[2] });
-
-	std::cout << "CLIENT!!" << std::endl;
-	ClientTcpSocket c(io_service, endpoint_iterator);
+	ClientTcpSocket c(std::string(av[1]), atoi(av[2]));
 	c.connect();
-	c.startService();
+	//c.startService();
 
 	char line[128 + 1];
 	// Connect client

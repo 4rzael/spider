@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Wed Nov  9 16:37:21 2016 debrab_t
+// Last update Sun Nov 13 14:48:02 2016 debrab_t
 //
 
 #ifndef SERVERTCPSOCKET_HPP_
@@ -19,6 +19,7 @@
 #include <set>
 #include <memory>
 #include <boost/asio.hpp>
+#include <thread>
 
 namespace spider
 {
@@ -39,7 +40,7 @@ namespace spider
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
-	_messages.push_back(data.getPackedData());
+	_messages.push_back(data.getPackedData(1));
 	_messagesSize.push_back(data.getPacketSize());
 	if (!_writing)
 	  doWrite();
@@ -52,13 +53,14 @@ namespace spider
       {
 	_writing = true;
 	boost::asio::async_write(_socket,
-				 boost::asio::buffer(_messages.front().get(),
+				 boost::asio::buffer(_messages.front(),
 						     _messagesSize.front()),
 				 [this](boost::system::error_code ec, std::size_t)
 				 {
 				   if (!ec)
 				     {
 				       std::cout << "packet send" << std::endl;
+				       delete[] _messages.front();
 				       _messages.pop_front();
 				       _messagesSize.pop_front();
 				       if (!_messages.empty())
@@ -79,7 +81,7 @@ namespace spider
       SqlServer				&_sqlServer;
 
       //packet
-      std::list<spider::packedData>	_messages;
+      std::list<char *>			_messages;
       std::list<int>			_messagesSize;
       bool				_writing;
       spider::PacketUnserializer	_packet;
@@ -92,13 +94,25 @@ namespace spider
     public:
       ServerTcpSocket(boost::asio::io_service& io_service,
 	     const boost::asio::ip::tcp::endpoint& endpoint);
+      void close();
+      void startService();
+      void closeService();
+
+      template<class packet>
+      void write(spider::PacketSerializer<packet> data)
+      {
+	for (auto ite = _clients.begin(); ite != _clients.end(); ++ite)
+	  (*ite).get()->write(data);
+      }
 
     private:
       void accept();
 
     private:
+      boost::asio::io_service &		_ioService;
       boost::asio::ip::tcp::acceptor	_acceptor;
       boost::asio::ip::tcp::socket	_socket;
+      std::shared_ptr<std::thread>	_runningService;
       std::set<user_ptr>		_clients;
       SqlServer				_sqlServer;
     };

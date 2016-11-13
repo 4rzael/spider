@@ -1,15 +1,15 @@
 //
-// SqlLink.hh for SqlLink in /home/debrab_t/rendu/TEK3/spider/bdd_connect
+// SqlManager.hh for sqlManager in /home/debrab_t/rendu/TEK3/cpp_spider
 //
 // Made by debrab_t
 // Login   <debrab_t@epitech.net>
 //
-// Started on  Wed Oct 26 16:26:01 2016 debrab_t
-// Last update Sun Nov 13 00:04:47 2016 debrab_t
+// Started on  Sun Nov 13 14:37:03 2016 debrab_t
+// Last update Sun Nov 13 14:38:29 2016 debrab_t
 //
 
-#ifndef SQLLINK_HH_
-# define SQLLINK_HH_
+#ifndef SQLMANAGER_HH_
+# define SQLMANAGER_HH_
 
 #include <pqxx/pqxx>
 #include <map>
@@ -37,4 +37,4 @@ private:
   pqxx::work		*wInfo;
 };
 
-#endif /* SQLLINK_HH_ */
+#endif /* SQLMANAGER_HH_ */

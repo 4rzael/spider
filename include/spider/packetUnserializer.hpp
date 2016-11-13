@@ -5,12 +5,13 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Mon Nov  7 10:00:25 2016 Gandoulf
-// Last update Wed Nov  9 14:31:31 2016 debrab_t
+// Last update Sun Nov 13 14:33:29 2016 debrab_t
 //
 
 #ifndef PACKETUNSERIALIZER_HPP_
 # define PACKETUNSERIALIZER_HPP_
 
+#include <iostream>
 #include <cstring>
 #include <memory>
 #include <iostream>

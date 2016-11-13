@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Wed Nov  9 15:50:56 2016 Gandoulf
+// Last update Sat Nov 12 18:12:30 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -127,9 +127,30 @@ namespace spider
 			      });
     }
 
-    /*void doWrite(PacketSerializer const &data)
+    void ClientTcpSocket::doWrite()
     {
-      std::cout << "trying to write" << std::endl;
-      }*/
+      _writing = true;
+      boost::asio::async_write(_socket,
+			       boost::asio::buffer(_messages.front(),
+						   _messagesSize.front()),
+			       [this](boost::system::error_code ec, std::size_t)
+			       {
+				 if (!ec)
+				   {
+				     std::cout << "packet send" << std::endl;
+				     _delete[] messages.front();
+				     _messages.pop_front();
+				     _messagesSize.pop_front();
+				     if (!_messages.empty())
+				       doWrite();
+				     else
+				       _writing = false;
+				   }
+				 else
+				   {
+				     _socket.close();
+				   }
+			       });
+    }
   }
 }

@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:31:50 2016 Gandoulf
-// Last update Fri Nov 11 13:56:00 2016 debrab_t
+// Last update Sun Nov 13 14:33:33 2016 debrab_t
 //
 
 #include <cstdlib>
@@ -34,7 +34,7 @@ namespace spider
 
     void user::close()
     {
-      _clients.erase(shared_from_this());
+      //_clients.erase(shared_from_this());
       _socket.close();
     }
 
@@ -76,10 +76,46 @@ namespace spider
 
     ServerTcpSocket::ServerTcpSocket(boost::asio::io_service& io_service,
 	   const tcp::endpoint& endpoint)
-      : _acceptor(io_service, endpoint),
+      : _ioService(io_service), _acceptor(io_service, endpoint),
 	_socket(io_service)
     {
       accept();
+    }
+
+    void ServerTcpSocket::close()
+    {
+      std::cout << "closing" << std::endl;
+      for (auto ite = _clients.begin(); ite != _clients.end(); ++ite)
+	(*ite).get()->close();
+      _clients.clear();
+      _ioService.stop();
+    }
+
+    void ServerTcpSocket::startService()
+    {
+      if (!_runningService)
+	{
+	  _runningService = std::shared_ptr<std::thread>
+	    (new std::thread([this]()
+	    {
+	      std::cout << "start thread and service" << std::endl;
+	      _ioService.run();
+	      std::cout << "stop running" << std::endl;
+	    }));
+	}
+      else
+	std::cout << "service already started" << std ::endl;
+    }
+
+    void ServerTcpSocket::closeService()
+    {
+      if (_runningService)
+	{
+	  _runningService->join();
+	  _runningService.reset();
+	}
+      else
+	std::cout << "nothing to release" << std::endl;
     }
 
     void ServerTcpSocket::accept()

@@ -1,8 +1,10 @@
 # clent and server
 
 set(SPIDER_SRC ${SPIDER_SRC}
-  "${CMAKE_CURRENT_LIST_DIR}/serverTcpSocket.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/clientTcpSocket.cpp"
+# "${CMAKE_CURRENT_LIST_DIR}/serverTcpSocket.cpp"
+# "${CMAKE_CURRENT_LIST_DIR}/clientTcpSocket.cpp"
+  "${CMAKE_CURRENT_LIST_DIR}/socketC/serverTcpSocketC.cpp"
+  "${CMAKE_CURRENT_LIST_DIR}/socketC/clientTcpSocketC.cpp"
   )
 
 set(SPIDER_INCLUDE_DIR ${SPIDER_INCLUDE_DIR}

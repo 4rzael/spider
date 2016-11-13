@@ -5,15 +5,15 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Sun Nov 13 14:13:02 2016 debrab_t
+// Last update Sun Nov 13 14:55:09 2016 debrab_t
 //
 
 #ifndef SQLSERVER_HH_
 # define SQLSERVER_HH_
 
-# include "socket/serverTcpSocket.hpp"
-# include "bdd_connect/HandleFileServer.hh"
+# include "bdd_connect/SqlManager.hh"
 # include "utils/stringManager.hh"
+# include "bdd_connect/HandleFileServer.hh"
 
 namespace spider
 {

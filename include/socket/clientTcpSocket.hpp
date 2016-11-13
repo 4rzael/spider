@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Thu Nov 10 23:36:56 2016 debrab_t
+// Last update Sun Nov 13 14:34:01 2016 debrab_t
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -36,7 +36,7 @@ namespace spider
       template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
-	_messages.push_back(data.getPackedData());
+	_messages.push_back(data.getPackedData(1));
 	_messagesSize.push_back(data.getPacketSize());
 	if (!_writing)
 	  doWrite();
@@ -54,30 +54,7 @@ namespace spider
       void identification();
       void readHeader();
       void readData();
-      void doWrite()
-      {
-	_writing = true;
-        boost::asio::async_write(_socket,
-				 boost::asio::buffer(_messages.front().get(),
-						     _messagesSize.front()),
-				 [this](boost::system::error_code ec, std::size_t)
-				 {
-				   if (!ec)
-				     {
-				       std::cout << "packet send" << std::endl;
-				       _messages.pop_front();
-				       _messagesSize.pop_front();
-				       if (!_messages.empty())
-					 doWrite();
-				       else
-					 _writing = false;
-				     }
-				   else
-				     {
-				       _socket.close();
-				     }
-				 });
-      }
+      void doWrite();
 
     private:
       boost::asio::io_service &			_ioService;
@@ -86,7 +63,7 @@ namespace spider
       std::shared_ptr<std::thread>		_runningService;
 
       //packet
-      std::list<spider::packedData>		_messages;
+      std::list<char *>				_messages;
       std::list<int>				_messagesSize;
       bool					_writing;
       spider::PacketUnserializer		_packet;

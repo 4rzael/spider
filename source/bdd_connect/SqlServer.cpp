@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Sun Nov 13 14:12:11 2016 debrab_t
+// Last update Sun Nov 13 16:27:37 2016 debrab_t
 //
 
 /*
@@ -14,10 +14,9 @@
   - appeler close quand un client ce deconnect du serv
   - reponse des clickmouse, key...
   - reponse sizeof(PackageHeader) + sizeof(PackageAnswer) ?
-  - verifier char to string, faire une copy correct du nombre de caractère !!!
 */
 
-#include "socket/serverTcpSocket.hpp"
+#include "socket/socketC/serverTcpSocketC.hpp"
 
 SqlServer::SqlServer()
 {
@@ -247,9 +246,17 @@ bool				SqlServer::response(spider::PacketUnserializer &packet)
 
 bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
 {
+  PackageCMDLogOut	dec;
+  PackageHeader		hea;
+  std::string		id_client;
 
+  id_client = std::to_string(hea.id);
+  if (isClient(id_client) && isClientState(id_client))
+    {
+      sqlMan.updateData("client", "state = FALSE WHERE CLIENT_ID=" + id_client);
+    }
+  return (false);
 }
-
 
 void	SqlServer::feedPointMap()
 {
