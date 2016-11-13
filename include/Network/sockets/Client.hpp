@@ -5,7 +5,7 @@
 // Login   <agor_m@epitech.net>
 //
 // Started on  Mon May  2 15:20:47 2016 Maxime Agor
-// Last update Sun Jun  5 18:54:05 2016 Maxime Agor
+// Last update Sun Nov 13 20:31:39 2016 Gandoulf
 //
 
 #ifndef CLIENT_HPP_

