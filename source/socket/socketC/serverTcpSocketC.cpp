@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sun Nov 13 16:36:12 2016 Gandoulf
+// Last update Sun Nov 13 17:59:37 2016 Gandoulf
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -29,17 +29,19 @@ namespace spider
       return (shared_from_this());
     }
 
+    void user::disconnect()
+    {
+      _server.disconnect(_fd);
+    }
+
     void user::close()
     {
-      if (_fd.fd != 0)
-	{
-	  std::cout << "disconnection" << std ::endl;
-	  _server.disconnect(_fd);
-	  _Mclients.lock();
-	  _clients.erase(shared_from_this());
-	  _Mclients.unlock();
-	  _fd = 0;
-	}
+      _server.disconnect(_fd);
+      _Mclients.lock();
+      _clients.erase(shared_from_this());
+      _Mclients.unlock();
+      _fd = 0;
+      std::cout << "disconnection" << std ::endl;
     }
 
     void user::read()
@@ -97,16 +99,22 @@ namespace spider
 		       });
       _server.OnDisconnect([this](Socket::Server & server, Socket::Server_Client &fd)
 			  {
+			    if (_clientsFD.size() == 0)
+			      return ;
 			    _clientsFD[fd].get()->close();
 			    auto deconnectedClient = _clientsFD.find(fd);
 			    _clientsFD.erase(deconnectedClient);
 			  });
       _server.OnReadPossible([this](Socket::Server & server, Socket::Server_Client &fd, size_t length)
 			    {
+			      if (_clientsFD.size() == 0)
+				return ;
 			      _clientsFD[fd].get()->read();
 			    });
       _server.OnWritePossible([this](Socket::Server & server, Socket::Server_Client &fd)
 			     {
+			       if (_clientsFD.size() == 0)
+				 return ;
 			       _clientsFD[fd].get()->doWrite();
 			     });
       _server.OnStart([this](Socket::Server & server, int port)
