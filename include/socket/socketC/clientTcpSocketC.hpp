@@ -79,7 +79,9 @@ namespace spider
 	  std::mutex _mtxQ;
 	  std::queue<char *> _rdQ;
 
+#ifdef _WIN32
 	  DWORD mainThreadId;
+#endif
     };
   }
 }

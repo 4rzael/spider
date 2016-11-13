@@ -55,8 +55,9 @@ namespace spider
 			     _messagesSize.clear();
 			     _Mqueue.unlock();
 			   });
-
+#ifdef _WIN32
 	  mainThreadId = GetCurrentThreadId();
+#endif
     }
 
 	ClientTcpSocket::~ClientTcpSocket()
@@ -157,7 +158,8 @@ namespace spider
 	  PacketUnserializer *unz = new PacketUnserializer();
 	  unz->setHeader(msg, sizeof(PackageHeader));
 	  unz->setData(msg + sizeof(PackageHeader), unz->getHeader().size - sizeof(PackageHeader));
-	  
+
+#ifdef _WIN32
 	  if (!strncmp(unz->getPacketType(), "SHU", 3))
 	  {
 		  PostThreadMessage(mainThreadId, WM_NULL, 0, (LPARAM)new std::string("SHU"));
@@ -178,6 +180,7 @@ namespace spider
 	  //if (!PostThreadMessage(mainThreadId, WM_NULL, 0, (LPARAM)test.str))
 		 // std::cout << "POST MESSAGE FAILED" << std::endl;
 	  SLEEPMS(1);
+#endif
     }
 
     void ClientTcpSocket::doWrite()
