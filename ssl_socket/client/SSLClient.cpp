@@ -117,6 +117,10 @@ namespace Socket
 		_isRunning = false;
 		if (_stateThread.joinable())
 			_stateThread.join();
+
+		SSL_free(_ssl);
+		close(_fd);
+		SSL_CTX_free(_ctx);
 	}
 
 	void  SSLClient::setTimeout(float t)
@@ -288,12 +292,13 @@ namespace Socket
 
 	bool SSLClient::initSSL()
 	{
+		const SSL_METHOD  *method;
+
 		OpenSSL_add_all_algorithms();
 		ERR_load_BIO_strings();
 		ERR_load_crypto_strings();
 		SSL_load_error_strings();
 
-		_certbio = BIO_new(BIO_s_file());
 		_outbio  = BIO_new_fp(stdout, BIO_NOCLOSE);
 
 		if (SSL_library_init() < 0)
@@ -301,8 +306,8 @@ namespace Socket
 			BIO_printf(_outbio, "Could not initialize the OpenSSL library !\n");
 			return false;
 		}
-		_method = SSLv23_client_method();
-		if ( (_ctx = SSL_CTX_new(_method)) == NULL)
+		method = SSLv23_client_method();
+		if ( (_ctx = SSL_CTX_new(method)) == NULL)
 		{
 		  BIO_printf(_outbio, "Unable to create a new SSL context structure.\n");
 		  return false;

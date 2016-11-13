@@ -66,10 +66,6 @@ namespace Socket
 		int     write(void const *buffer, size_t size);
 		size_t  bytesAvailables();
 
-	/* SSL */
-
-		bool initSSL();
-
 	protected:
 		std::string _address;
 		int	        _port;
@@ -85,11 +81,7 @@ namespace Socket
 		std::function < void (SSLClient &, std::string const &, int) > _OnStart;
 
 		// SSL
-		BIO               *_certbio = NULL;
 		BIO               *_outbio = NULL;
-		X509              *_cert = NULL;
-		X509_NAME         *_certname = NULL;
-		const SSL_METHOD  *_method;
 		SSL_CTX           *_ctx;
 		SSL               *_ssl;
 
@@ -98,6 +90,7 @@ namespace Socket
 	private:
 		void              stateChecker();
 		void              disconnect();
+		bool              initSSL();
 		void              prefetch_data();
 		fd_set            _fd_set;
 		std::atomic<bool> _isRunning;
