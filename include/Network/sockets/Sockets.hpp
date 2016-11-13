@@ -17,8 +17,9 @@
 
 #ifdef _WIN32
 # include <winsock2.h>
+# include <Ws2tcpip.h>
 # define ioctl ioctlsocket
-# define inet_pton inetPton
+# define inet_pton InetPton
 
 # ifndef SLEEPMS
 #  define SLEEPMS(c) Sleep(c)

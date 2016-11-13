@@ -5,11 +5,15 @@
 # include <sys/select.h>
 #endif
 
+#ifdef _WIN32
+# pragma comment(lib, "ws2_32.lib")
+#endif
+
 #include <iostream>
 #include <fcntl.h>
 
-
 #include "Network/sockets/Client.hpp"
+# include "Network/sockets/Sockets.hpp"
 
 namespace Socket
 {

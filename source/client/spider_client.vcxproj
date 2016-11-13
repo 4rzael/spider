@@ -126,16 +126,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\client\WindowsInputHandler.hpp" />
-    <ClInclude Include="..\..\include\socket\clientTcpSocket.hpp" />
+    <ClInclude Include="..\..\include\Network\sockets\Client.hpp" />
+    <ClInclude Include="..\..\include\Network\sockets\SocketErrors.hpp" />
+    <ClInclude Include="..\..\include\Network\sockets\Sockets.hpp" />
+    <ClInclude Include="..\..\include\socket\socketC\clientTcpSocketC.hpp" />
     <ClInclude Include="..\..\include\spider\packetSerializer.hpp" />
     <ClInclude Include="..\..\include\spider\packetUnserializer.hpp" />
     <ClInclude Include="..\..\include\spider\protocol.hpp" />
     <ClInclude Include="..\..\include\spider\spider.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\socket\clientTcpSocket.cpp" />
+    <ClCompile Include="..\Network\sockets\Client.cpp" />
+    <ClCompile Include="..\socket\socketC\clientTcpSocketC.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="WindowsInputHandler.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\.gitignore" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
