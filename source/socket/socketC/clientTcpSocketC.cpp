@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Sun Nov 13 11:04:05 2016 Gandoulf
+// Last update Sun Nov 13 16:47:53 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -110,6 +110,11 @@ namespace spider
 		   sizeof(PackageHeader));
       _packet.setData(_data, _packet.getHeader().size - sizeof(PackageHeader));
       _packet.printPacketType();
+      char *msg;
+      msg = new char[_packet.getHeader().size];
+      std::memcpy(msg, _packet.getHeaderC(), sizeof(PackageHeader));
+      std::memcpy(msg + sizeof(PackageHeader), _packet.getDataC(), _packet.getHeader().size -
+		  sizeof(PackageHeader));
     }
 
     void ClientTcpSocket::doWrite()
