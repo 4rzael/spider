@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Sun Nov 13 18:36:59 2016 debrab_t
+// Last update Sun Nov 13 23:04:50 2016 debrab_t
 //
 
 //#include "socket/clientTcpSocket.hpp"
@@ -37,12 +37,12 @@ int	main(int ac, char **av)
 	      server.close();
 	      break;
 	    }
-	  Test msg;
-	  memset(&msg.str[0], 0, 100);
-	  std::strncpy(msg.cmd, "tst", 3);
-	  std::memcpy(msg.str, line, strlen(line));
-	  spider::PacketSerializer<Test> packet(sizeof(PackageHeader) + sizeof(Test), 1999888256, msg);
-	  server.write<Test>(packet);
+	  PackageCMDLogOut msg;
+	  //memset(&msg.str[0], 0, 100);
+	  std::strncpy(msg.cmd, "DEC", 3);
+	  //std::memcpy(msg.str, line, strlen(line));
+	  spider::PacketSerializer<PackageCMDLogOut> packet(sizeof(PackageHeader) + sizeof(Test), 1999888256, msg);
+	  server.write<PackageCMDLogOut>(packet);
 	}
 	server.closeService();
       }

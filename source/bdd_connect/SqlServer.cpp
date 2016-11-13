@@ -5,13 +5,14 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Sun Nov 13 19:45:46 2016 debrab_t
+// Last update Sun Nov 13 23:18:03 2016 debrab_t
 //
 
 /*
   TODO
 
   - appeler close quand un client ce deconnect du serv
+  - tester le truc juste au dessus
   - reponse des clickmouse, key...
   - reponse sizeof(PackageHeader) + sizeof(PackageAnswer) ?
 */
@@ -20,6 +21,7 @@
 
 SqlServer::SqlServer()
 {
+  _tmsTOC = 0;
   feedPointMap();
   if (dbConnect("dbname=postgres user=postgres password=abcd hostaddr=127.0.0.1 port=5432"))
     {
@@ -209,9 +211,6 @@ bool	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
       std::cerr << "Try to add keyboard string but magic number is false..." << std::endl;
       return (false);
     }
-  /*  if (toc.timestamp > _tmsTOC + 2000)
-      _tmsTOC = toc.timestamp;*/
-  std::cout << "----->" << toc.id << std::endl;
   id_client = std::to_string(hea.id);
   data = id_client +
     ", " + std::to_string(toc.timestamp) +
@@ -249,11 +248,15 @@ bool				SqlServer::response(spider::PacketUnserializer &packet)
 
 bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
 {
+  std::string	stringPacket(packet.getPacketType(), 0, 3);
   PackageCMDLogOut	dec;
   PackageHeader		hea;
   PackageAnswer		ans;
   std::string		id_client;
 
+  std::cout << "--->DEC<---" << std::endl;
+  if (stringPacket.compare("DEC") != 0)
+    return (true);
   dec = packet.getData<PackageCMDLogOut>();
   hea = packet.getHeader();
   if (hea.magicNumber != SEND)
@@ -264,6 +267,7 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
   id_client = std::to_string(hea.id);
   if (isClient(id_client) && isClientState(id_client))
     {
+      std::cout << "--->disconnect with id:" << id_client << std::endl;
       sqlMan.updateData("client", "state = FALSE WHERE CLIENT_ID=" + id_client);
       hea.magicNumber = REC;
       ans.header = hea;
@@ -271,7 +275,7 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
       std::strncpy(ans.cmd, "DEC", 3);
       std::strncpy(ans.msg, "Deconnection ok\0", std::strlen("Deconnection ok"));
       spider::PacketSerializer<PackageAnswer> respPack(sizeof(PackageHeader) + sizeof(PackageAnswer), hea.id, ans);
-      //c.write<PackageAnswer>(respPack);
+      _user.get()->write<PackageAnswer>(respPack);
     }
   return (false);
 }
@@ -293,12 +297,10 @@ void	SqlServer::feedPointMap()
 
 bool		SqlServer::handleData(spider::PacketUnserializer &packet, std::shared_ptr<spider::socket::user> usr)
 {
-  //return (false);
   std::string	stringPacket(packet.getPacketType(), 0, 3);
   bool		ret = false;
 
   _user = usr;
-  std::cout << "PACKET--->" << stringPacket << std::endl;
   if (!_cnt)
     return (false);
   else if (_pointMap.find(stringPacket) != _pointMap.end())

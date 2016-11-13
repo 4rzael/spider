@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Sun Nov 13 19:28:16 2016 debrab_t
+// Last update Sun Nov 13 21:45:11 2016 debrab_t
 //
 
 #ifndef SQLSERVER_HH_
@@ -52,7 +52,7 @@ private:
   std::shared_ptr<spider::socket::user> _user;
   bool			_cnt;
   unsigned int		_tmsTOC;
-  std::string		_keyToc;
+  std::string		_keyTOC;
 };
 
 #endif /* SQLSERVER_HH_ */
