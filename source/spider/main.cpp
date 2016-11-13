@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Sun Nov 13 14:33:38 2016 debrab_t
+// Last update Sun Nov 13 17:47:54 2016 debrab_t
 //
 
 //#include "socket/clientTcpSocket.hpp"
@@ -78,6 +78,7 @@ int	main(int ac, char **av)
 	  c.write<PackageCMDLogOut>(packet);
 	  */
 	  // keyboard
+
 	  PackageCMDKeyboardTouch msg;
 	  memset(&msg.id[0], 0, 50);
 	  std::memcpy(msg.id, line, strlen(line));
@@ -88,7 +89,7 @@ int	main(int ac, char **av)
 	  c.write<PackageCMDKeyboardTouch>(packet2);
 
 	  //mouse move
-
+	  /*
 	  PackageCMDMouseMove msg2;
 	  msg2.x = 1;
 	  msg2.y = 2;
@@ -96,9 +97,11 @@ int	main(int ac, char **av)
 	  std::strncpy(msg2.cmd, "mVt", 3);
 	  //std::memcpy(msg.key, line, strlen(line));
 	  spider::PacketSerializer<PackageCMDMouseMove> packet3(sizeof(PackageHeader) + sizeof(PackageCMDMouseMove), 4, msg2);
-	  c.write<PackageCMDMouseMove>(packet3);
 
+	  c.write<PackageCMDMouseMove>(packet3);
+	  */
 	  // mouse click
+	  /*
 	  PackageCMDMouseClic msg3;
 	  msg3.x = 1;
 	  msg3.y = 2;
@@ -108,7 +111,7 @@ int	main(int ac, char **av)
 	  //std::memcpy(msg.key, line, strlen(line));
 	  spider::PacketSerializer<PackageCMDMouseClic> packet4(sizeof(PackageHeader) + sizeof(PackageCMDMouseClic), 4, msg3);
 	  c.write<PackageCMDMouseClic>(packet4);
-
+	  */
 	  /*
 	    // Connect client
 	    PackageCMDIDN msg;

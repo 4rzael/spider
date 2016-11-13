@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Sun Nov 13 16:53:03 2016 debrab_t
+// Last update Sun Nov 13 17:48:47 2016 debrab_t
 //
 
 /*
@@ -248,12 +248,21 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
 {
   PackageCMDLogOut	dec;
   PackageHeader		hea;
+  PackageAnswer		ans;
   std::string		id_client;
 
+  dec = packet.getData<PackageCMDLogOut>();
+  hea = packet.getHeader();
   id_client = std::to_string(hea.id);
   if (isClient(id_client) && isClientState(id_client))
     {
       sqlMan.updateData("client", "state = FALSE WHERE CLIENT_ID=" + id_client);
+      ans.header = hea;
+      ans.code = 208;
+      std::strncpy(ans.cmd, "DEC", 3);
+      std::strncpy(ans.msg, "Deconnection ok\0", std::strlen("Deconnection ok"));
+      spider::PacketSerializer<PackageAnswer> respPack(sizeof(PackageHeader) + sizeof(PackageAnswer), hea.id, ans);
+      //c.write<PackageAnswer>(respPack);
     }
   return (false);
 }
