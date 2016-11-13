@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sun Nov 13 11:27:02 2016 Gandoulf
+// Last update Sun Nov 13 17:56:23 2016 Gandoulf
 //
 
 #ifndef SERVERTCPSOCKETC_HPP_
@@ -35,6 +35,7 @@ namespace spider
       user(Socket::Server & server, std::set<user_ptr> & clients, SqlServer &sqlServer,
 	   int fd, std::mutex & Mclients);
       user_ptr start();
+      void disconnect();
       void close();
       void read();
 

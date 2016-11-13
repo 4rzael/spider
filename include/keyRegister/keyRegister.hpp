@@ -1,6 +1,8 @@
 #ifndef KEYREGISTER_HPP_
 # define KEYREGISTER_HPP_
 
+#include "spider/packetSerializer.hpp"
+
 #include <list>
 #include <iostream>
 #include <fstream>
