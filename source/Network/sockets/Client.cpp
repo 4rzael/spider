@@ -88,10 +88,17 @@ namespace Socket
 
     if (connect(_fd, (SOCKADDR *)&addr, sizeof(addr)) < 0)
       {
-		if (WSAGetLastError() != WSAEWOULDBLOCK)
-		{
-			throw SocketConnectError("client : " + std::string(strerror(getError())));
-		}
+#ifdef _WIN32
+	if (WSAGetLastError() != WSAEWOULDBLOCK)
+	  {
+	    throw SocketConnectError("client : " + std::string(strerror(getError())));
+	  }
+#else
+	if (errno != EINPROGRESS)
+	  {
+	    throw SocketConnectError("client : " + std::string(strerror(getError())));
+	  }
+#endif
       }
 
     // create select() sets

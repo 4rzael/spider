@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sun Nov 13 16:35:47 2016 debrab_t
+// Last update Sun Nov 13 16:59:51 2016 debrab_t
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -33,7 +33,7 @@ namespace spider
     {
       if (_fd != 0)
 	{
-	  std::cout << "disconnection" << std ::endl;
+	  std::cout << "disconnection:" << _fd << std ::endl;
 	  _server.disconnect(_fd);
 	  _Mclients.lock();
 	  _clients.erase(shared_from_this());
@@ -78,7 +78,7 @@ namespace spider
       _packet.setData(_data, _packet.getHeader().size - sizeof(PackageHeader));
       _packet.printPacketType();
       if (!_sqlServer.handleData(_packet, shared_from_this()))
-	close();
+	disconnect();
     }
 
     //server behavior
