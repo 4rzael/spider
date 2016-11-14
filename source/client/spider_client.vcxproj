@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\client\ClientSpider.hpp" />
     <ClInclude Include="..\..\include\client\WindowsInputHandler.hpp" />
+    <ClInclude Include="..\..\include\keyRegister\keyRegister.hpp" />
     <ClInclude Include="..\..\include\Network\sockets\Client.hpp" />
     <ClInclude Include="..\..\include\Network\sockets\SocketErrors.hpp" />
     <ClInclude Include="..\..\include\Network\sockets\Sockets.hpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="..\..\include\spider\spider.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\keyRegister\keyRegister.cpp" />
     <ClCompile Include="..\Network\sockets\Client.cpp" />
     <ClCompile Include="..\socket\socketC\clientTcpSocketC.cpp" />
     <ClCompile Include="ClientSpider.cpp" />

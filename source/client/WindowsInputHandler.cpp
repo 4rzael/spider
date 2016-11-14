@@ -106,6 +106,8 @@ namespace spider
 		KBDLLHOOKSTRUCT hookedKey = *((KBDLLHOOKSTRUCT*)lParam);
 		int keyPressed = hookedKey.vkCode;
 
+		std::cout << "test" << std::endl;
+
 		if (wParam == WM_SYSKEYDOWN ||wParam == WM_KEYDOWN)
 		{
 			if (hookedKey.vkCode == VK_LSHIFT || hookedKey.vkCode == VK_RSHIFT)

