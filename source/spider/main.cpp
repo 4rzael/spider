@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Tue Oct 25 16:46:11 2016 Gandoulf
-// Last update Sun Nov 13 19:39:19 2016 Gandoulf
+// Last update Mon Nov 14 10:28:34 2016 Gandoulf
 //
 
 //#include "socket/clientTcpSocket.hpp"
@@ -61,6 +61,14 @@ int	main(int ac, char **av)
 	while (std::cin.getline(line, 128 + 1)) {
 	  if (!std::strncmp(line, "quit", 4))
 	    break;
+	  if (!std::strncmp(line, "conn", 4))
+	    {
+	      c.connect();
+	    }
+	  if (!std::strncmp(line, "fake", 4))
+	    {
+	      c.fakeservice();
+	    }
 	  Test msg;
 	  memset(&msg.str[0], 0, 100);
 	  std::strncpy(msg.cmd, "tst", 3);

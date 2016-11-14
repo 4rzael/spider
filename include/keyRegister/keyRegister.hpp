@@ -14,14 +14,15 @@ namespace spider
 	{
 	public:
 		KeyRegister(size_t fileMaxSize = 1000000);
+		~KeyRegister();
 		void write(char *msg, int length);
-		char *read();
+		int read(char *&messages);
+		void swapMode();
 
 	private:
-		void swapMode();
 		void openReadableFile();
 		void openWriteableFile();
-		std::string getRandomAscii();
+		void getRandomAscii(std::string &filname);
 
 	private:
 		std::fstream			_currentFile;

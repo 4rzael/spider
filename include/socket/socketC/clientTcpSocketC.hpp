@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Sun Nov 13 22:26:11 2016 Gandoulf
+// Last update Mon Nov 14 15:04:39 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -39,6 +39,13 @@ namespace spider
 	_Mqueue.lock();
 	_messages.push_back(data.getPackedData(1));
 	_messagesSize.push_back(data.getPacketSize());
+	if (!_runningService)
+	  {
+	    _keyRegister.write(_messages.front(), _messagesSize.front());
+	    delete[] _messages.front();
+	    _messages.pop_front();
+	    _messagesSize.pop_front();
+	  }
 	_Mqueue.unlock();
       }
 
@@ -46,6 +53,12 @@ namespace spider
       bool startedService() const;
       void startService();
       void closeService();
+
+      void fakeservice()
+      {
+	_runningService = !_runningService;
+	_keyRegister.swapMode();
+      }
 
       //setter
       void setClientID(int id);
@@ -59,6 +72,7 @@ namespace spider
       void readHeader();
       void readData();
       void doWrite();
+      void pushFileCMD(char *bufferFileCMD, int bufferSize);
 
     private:
       Socket::Client				_client;
@@ -74,8 +88,8 @@ namespace spider
       spider::PacketUnserializer		_packet;
       char					_data[128];
       std::mutex				_Mqueue;
-	  std::mutex _mtxQ;
-	  std::queue<char *> _rdQ;
+      std::mutex _mtxQ;
+      std::queue<char *> _rdQ;
 
       spider::KeyRegister			_keyRegister;
     };

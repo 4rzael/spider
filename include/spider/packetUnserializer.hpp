@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Mon Nov  7 10:00:25 2016 Gandoulf
-// Last update Sun Nov 13 17:00:35 2016 Gandoulf
+// Last update Mon Nov 14 14:59:01 2016 Gandoulf
 //
 
 #ifndef PACKETUNSERIALIZER_HPP_
@@ -54,7 +54,6 @@ namespace spider
     }
 
     //setter
-
     void setHeader(char *header, int size)
     {
       if (_header != NULL)
