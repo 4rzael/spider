@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:20:28 2016 Gandoulf
-// Last update Sat Nov 12 18:14:27 2016 Gandoulf
+// Last update Sun Nov 13 14:48:02 2016 debrab_t
 //
 
 #ifndef SERVERTCPSOCKET_HPP_
@@ -13,6 +13,7 @@
 
 #include "spider/packetUnserializer.hpp"
 #include "spider/packetSerializer.hpp"
+#include "bdd_connect/SqlManager.hh"
 #include "bdd_connect/SqlServer.hh"
 
 #include <set>
@@ -80,7 +81,7 @@ namespace spider
       SqlServer				&_sqlServer;
 
       //packet
-      std::list<char *>		x	_messages;
+      std::list<char *>			_messages;
       std::list<int>			_messagesSize;
       bool				_writing;
       spider::PacketUnserializer	_packet;

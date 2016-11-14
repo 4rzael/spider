@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:31:50 2016 Gandoulf
-// Last update Fri Nov 11 15:31:05 2016 Gandoulf
+// Last update Sun Nov 13 16:56:30 2016 debrab_t
 //
 
 #include <cstdlib>
@@ -65,10 +65,8 @@ namespace spider
 				  {
 				    _packet.setData(_data, length);
 				    _packet.printPacketType();
-
-				    /*
-				      bdd fonction
-				    */
+				    if (!_sqlServer.handleData(_packet, shared_from_this()))
+				      close();
 				    readHeader();
 				  }
 			      });

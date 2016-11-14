@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Sun Nov 13 20:33:45 2016 Gandoulf
+// Last update Sun Nov 13 23:21:16 2016 debrab_t
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -39,7 +39,7 @@ namespace spider
 
     void user::close()
     {
-
+      //_sqlServer.disconnectClient(_packet);
       _server.disconnect(_fd);
       _Mclients.lock();
       _clients.erase(shared_from_this());
@@ -109,10 +109,8 @@ namespace spider
 		   sizeof(PackageHeader));
       _packet.setData(_data, _packet.getHeader().size - sizeof(PackageHeader));
       _packet.printPacketType();
-
-      /*
-	bdd fonction
-      */
+      if (!_sqlServer.handleData(_packet, shared_from_this()))
+	disconnect();
     }
 
     //server behavior

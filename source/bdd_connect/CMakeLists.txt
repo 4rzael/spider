@@ -3,6 +3,7 @@
 set(SPIDER_SRC ${SPIDER_SRC}
   "${CMAKE_CURRENT_LIST_DIR}/SqlManager.cpp"
   "${CMAKE_CURRENT_LIST_DIR}/SqlServer.cpp"
+  "${CMAKE_CURRENT_LIST_DIR}/HandleFileServer.cpp"
   )
 
 set(SPIDER_INCLUDE_DIR ${SPIDER_INCLUDE_DIR}

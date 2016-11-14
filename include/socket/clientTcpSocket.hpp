@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Sat Nov 12 18:11:49 2016 Gandoulf
+// Last update Sun Nov 13 14:34:01 2016 debrab_t
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -14,6 +14,8 @@
 #include <list>
 #include <thread>
 #include <boost/asio.hpp>
+#include <string>
+#include <iostream>
 
 #include "spider/packetSerializer.hpp"
 #include "spider/packetUnserializer.hpp"
@@ -48,7 +50,6 @@ namespace spider
       //setter
       void setClientID(int id);
       void setEndPoint(boost::asio::ip::tcp::resolver::iterator const &endpoint);
-
     private:
       void identification();
       void readHeader();
@@ -59,7 +60,6 @@ namespace spider
       boost::asio::io_service &			_ioService;
       boost::asio::ip::tcp::socket		_socket;
       boost::asio::ip::tcp::resolver::iterator	_endpoint;
-      int					_clientID;
       std::shared_ptr<std::thread>		_runningService;
 
       //packet
@@ -68,6 +68,7 @@ namespace spider
       bool					_writing;
       spider::PacketUnserializer		_packet;
       char					_data[128];
+      int					_clientID;
     };
   }
 }

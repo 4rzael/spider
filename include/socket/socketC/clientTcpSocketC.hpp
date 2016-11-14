@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov  5 12:11:59 2016 Gandoulf
-// Last update Mon Nov 14 15:04:39 2016 Gandoulf
+// Last update Mon Nov 14 15:33:40 2016 Gandoulf
 //
 
 #ifndef CLIENTTCPSOCKET_HPP_
@@ -16,6 +16,9 @@
 #include "Network/sockets/Client.hpp"
 #include "keyRegister/keyRegister.hpp"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 #include <list>
 #include <mutex>
 #include <queue>
@@ -92,6 +95,10 @@ namespace spider
       std::queue<char *> _rdQ;
 
       spider::KeyRegister			_keyRegister;
+
+#ifdef _WIN32
+      DWORD mainThreadId;
+#endif
     };
   }
 }

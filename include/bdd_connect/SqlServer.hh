@@ -5,13 +5,23 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Sat Nov 12 12:43:34 2016 Gandoulf
+// Last update Sun Nov 13 21:45:11 2016 debrab_t
 //
 
 #ifndef SQLSERVER_HH_
 # define SQLSERVER_HH_
 
-#include "bdd_connect/SqlManager.hh"
+# include "bdd_connect/SqlManager.hh"
+# include "utils/stringManager.hh"
+# include "bdd_connect/HandleFileServer.hh"
+
+namespace spider
+{
+  namespace socket
+  {
+    class user;
+  }
+}
 
 class SqlServer
 {
@@ -20,14 +30,29 @@ public:
   ~SqlServer();
   bool	dbConnect(std::string const &);
   void	createServTab();
-  void	addClient();
-  void	addMouseMouvement();
-  void	addMouseClick();
-  void	addKeyboardString();
+  bool	connectClient(spider::PacketUnserializer &);
+  bool	addMouseMouvement(spider::PacketUnserializer &);
+  bool	addMouseClick(spider::PacketUnserializer &);
+  bool	addKeyboardString(spider::PacketUnserializer &);
+  bool	disconnectClient(spider::PacketUnserializer &);
+  bool	response(spider::PacketUnserializer &);
+  bool	handleData(spider::PacketUnserializer &,
+		   std::shared_ptr<spider::socket::user> );
+  void	feedPointMap();
+  bool	isClient(const std::string &);
+  bool	isClientState(const std::string &);
+  std::string		insertStringAfterChar(std::string, char, std::string);
 
 private:
-  SqlManager	sqlMan;
-  int		clientId;
+  SqlManager		sqlMan;
+  StringManager		strMan;
+  HandleFileServer	dataToFile;
+  typedef bool	(SqlServer::*bddFunc)(spider::PacketUnserializer &);
+  std::map<std::string, bddFunc> _pointMap;
+  std::shared_ptr<spider::socket::user> _user;
+  bool			_cnt;
+  unsigned int		_tmsTOC;
+  std::string		_keyTOC;
 };
 
 #endif /* SQLSERVER_HH_ */
