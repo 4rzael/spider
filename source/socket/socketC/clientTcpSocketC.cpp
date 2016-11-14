@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Mon Nov 14 17:21:21 2016 Gandoulf
+// Last update Mon Nov 14 17:50:13 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -25,7 +25,6 @@ namespace spider
       memset(&_data[0], 0, 128);
       _client.OnReadPossible([this](Socket::Client &client, size_t length)
 			     {
-			       std::cout << "length = " << length << std::endl;
 			       if (/*_firstRead &&*/ length == 21)
 				 {
 				   _firstRead = false;
