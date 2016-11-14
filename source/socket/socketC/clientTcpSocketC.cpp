@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Wed Nov  9 15:32:04 2016 Gandoulf
-// Last update Mon Nov 14 15:15:45 2016 Gandoulf
+// Last update Mon Nov 14 17:21:21 2016 Gandoulf
 //
 
 #include <cstdlib>
@@ -75,19 +75,19 @@ namespace spider
 	  for (auto it = _messages.begin(); it != _messages.end(); ++it)
 	    {
 	      delete[] * it;
-	      }*/
+	    }*/
 	}
 
     void ClientTcpSocket::close()
     {
-      if (_runningService)
-	{
-	  _runningService = false;
-	  std::cout << "close client" << std::endl;
-	  _client.stop();
-	}
-      else
-	std::cout << "client already close" << std::endl;
+      _runningService = false;
+      std::cout << "close client" << std::endl;
+      try {
+	_client.stop();
+      }
+      catch (const std::exception e) {
+	std::cout << "client not connected" << std::endl;
+      }
     }
 
     void ClientTcpSocket::connect()
