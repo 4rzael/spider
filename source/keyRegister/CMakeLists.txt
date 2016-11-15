@@ -1,8 +1,7 @@
-# spider
+# clent and server
 
 set(SPIDER_SRC ${SPIDER_SRC}
-  "${CMAKE_CURRENT_LIST_DIR}/main.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/handleCmdToClient.cpp"
+  "${CMAKE_CURRENT_LIST_DIR}/keyRegister.cpp"
   )
 
 set(SPIDER_INCLUDE_DIR ${SPIDER_INCLUDE_DIR}

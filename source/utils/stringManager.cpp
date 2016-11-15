@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Sat Nov 12 23:16:29 2016 debrab_t
-// Last update Sun Nov 13 13:57:50 2016 debrab_t
+// Last update Tue Nov 15 09:26:07 2016 debrab_t
 //
 
 #include "utils/stringManager.hh"
@@ -40,4 +40,14 @@ void		StringManager::toLowerCase(std::string &str)
       if (str[i] >= 'A' && str[i] <= 'Z')
 	str[i] = str[i] + 32;
     }
+}
+
+bool		StringManager::checkNumber(const std::string &str) const
+{
+  for (int i = 0; i != str.length(); i++)
+    {
+      if (str[i] < '0' || str[i] > '9')
+	return (false);
+    }
+  return (true);
 }

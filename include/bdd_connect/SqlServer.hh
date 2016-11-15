@@ -5,7 +5,7 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:23 2016 debrab_t
-// Last update Mon Nov 14 15:44:17 2016 debrab_t
+// Last update Mon Nov 14 22:45:55 2016 debrab_t
 //
 
 #ifndef SQLSERVER_HH_
@@ -23,7 +23,7 @@ namespace spider
   }
 }
 
-class SqlServer
+class	SqlServer
 {
 public:
   SqlServer();

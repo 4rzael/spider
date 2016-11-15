@@ -5,7 +5,7 @@
 // Login   <gandoulf@epitech.net>
 //
 // Started on  Sat Nov 12 11:24:36 2016 Gandoulf
-// Last update Mon Nov 14 18:49:36 2016 debrab_t
+// Last update Tue Nov 15 13:54:07 2016 debrab_t
 //
 
 #include "socket/socketC/serverTcpSocketC.hpp"
@@ -107,7 +107,6 @@ namespace spider
       _server.read(_fd, static_cast<void *>(_data), _packet.getHeader().size -
 		   sizeof(PackageHeader));
       _packet.setData(_data, _packet.getHeader().size - sizeof(PackageHeader));
-      _packet.printPacketType();
       if (!_sqlServer.handleData(_packet, shared_from_this()))
 	disconnect();
     }

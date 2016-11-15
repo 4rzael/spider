@@ -165,7 +165,7 @@ namespace Socket
 			closesocket(fd);
 			FD_CLR(fd, &_fd_set);
 
-			auto max = (std::max_element(_clients.begin(), _clients.end(), 
+			auto max = (std::max_element(_clients.begin(), _clients.end(),
 				[]( std::pair<int, Server_Client> const &first,
 					std::pair<int, Server_Client> const &second) {
 					return std::get<1>(first).fd < std::get<1>(second).fd;
@@ -189,29 +189,33 @@ namespace Socket
 		if (!isConnected(fd))
 			return 0;
 
-		Server_Client &c = getClientByFd(fd);
+		try {
+		  Server_Client &c = getClientByFd(fd);
 
-		// read from the SSL socket
-		prefetch_data(fd);
+		  // read from the SSL socket
+		  prefetch_data(fd);
 
 
-		if (c.internal_read_buffer.empty())
-			return 0;
-		// copy the internal buffer to the given one
-		size_t cpy_size = size < c.internal_read_buffer.size() ? size : c.internal_read_buffer.size();
-		memcpy(buffer, c.internal_read_buffer.data(), cpy_size);
-		// delete copied data from the internal buffer
-		auto cpy_buffer = c.internal_read_buffer;
-		auto cpy_buffer_iter = cpy_buffer.begin();
-		for (int i = 0; i < cpy_size && cpy_buffer_iter != cpy_buffer.end();) {
-			++i;
-			++cpy_buffer_iter;
+		  if (c.internal_read_buffer.empty())
+		    return 0;
+		  // copy the internal buffer to the given one
+		  size_t cpy_size = size < c.internal_read_buffer.size() ? size : c.internal_read_buffer.size();
+		  memcpy(buffer, c.internal_read_buffer.data(), cpy_size);
+		  // delete copied data from the internal buffer
+		  auto cpy_buffer = c.internal_read_buffer;
+		  auto cpy_buffer_iter = cpy_buffer.begin();
+		  for (int i = 0; i < cpy_size && cpy_buffer_iter != cpy_buffer.end();) {
+		    ++i;
+		    ++cpy_buffer_iter;
+		  }
+		  c.internal_read_buffer = std::vector<char>(cpy_buffer_iter, cpy_buffer.end());
+		  if (c.internal_read_buffer.size() < 4096)
+		    c.internal_read_buffer.reserve(4096);
+
+		  return cpy_size;
+		} catch (...) {
+		  return 0;
 		}
-		c.internal_read_buffer = std::vector<char>(cpy_buffer_iter, cpy_buffer.end());
-		if (c.internal_read_buffer.size() < 4096)
-			c.internal_read_buffer.reserve(4096);
-
-		return cpy_size;
 	}
 
 	int  Server::write(int fd, void const *buffer, size_t size)
@@ -220,25 +224,30 @@ namespace Socket
 		if (!isConnected(fd))
 			return 0;
 
-		Server_Client &c = getClientByFd(fd);
+		try {
+		  Server_Client &c = getClientByFd(fd);
 
-		int tmp = 0;
-		size_t s = 0;
+		  int tmp = 0;
+		  size_t s = 0;
 
-		while (s < size && (tmp = SSL_write(c.ssl, (char *)buffer + s, size - s)) > 0) {
-			s += tmp;
+		  while (s < size && (tmp = SSL_write(c.ssl, (char *)buffer + s, size - s)) > 0) {
+		    s += tmp;
+		  }
+
+		  if (tmp < 0)
+		    {
+		      if (SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_READ ||
+			  SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_WRITE)
+			return s;
+		      else
+			disconnect(fd);
+		    }
+
+		  return s;
 		}
-
-		if (tmp < 0)
-		{
-			if (SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_READ ||
-				SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_WRITE)
-				return s;
-			else
-				disconnect(fd);
+		catch (...) {
+		  return 0;
 		}
-
-		return s;
 	}
 
 	void Server::prefetch_data(int fd)
@@ -247,32 +256,34 @@ namespace Socket
 		if (!isConnected(fd))
 			return ;
 
-		Server_Client &c = getClientByFd(fd);
+		try {
+		  Server_Client &c = getClientByFd(fd);
 
-		int tmp = 0;
-		char buffer[4096];
+		  int tmp = 0;
+		  char buffer[4096];
 
-		while ((tmp = SSL_read(c.ssl, buffer, 4096)) > 0)
-		{
-			// page_size optimization : 4096 bytes page
-			if ((c.internal_read_buffer.size() + tmp) % 4096 < tmp)
-				c.internal_read_buffer.reserve((c.internal_read_buffer.size() / 4096 + 1) * 9096 + 4096);
-			// add data to the internal buffer
-			c.internal_read_buffer.reserve(c.internal_read_buffer.size() + tmp);
-			for (int i = 0; i < tmp; ++i)
-				c.internal_read_buffer.push_back(buffer[i]);
-		}
+		  while ((tmp = SSL_read(c.ssl, buffer, 4096)) > 0)
+		    {
+		      // page_size optimization : 4096 bytes page
+		      if ((c.internal_read_buffer.size() + tmp) % 4096 < tmp)
+			c.internal_read_buffer.reserve((c.internal_read_buffer.size() / 4096 + 1) * 9096 + 4096);
+		      // add data to the internal buffer
+		      c.internal_read_buffer.reserve(c.internal_read_buffer.size() + tmp);
+		      for (int i = 0; i < tmp; ++i)
+			c.internal_read_buffer.push_back(buffer[i]);
+		    }
 
-		if (tmp < 0)
-		{
-			// nothing to read anymore
-			if (SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_READ ||
-				SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_WRITE)
-				return ;
-			// error
-			else
-				disconnect(fd);
-		}
+		  if (tmp < 0)
+		    {
+		      // nothing to read anymore
+		      if (SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_READ ||
+			  SSL_get_error(c.ssl, tmp) == SSL_ERROR_WANT_WRITE)
+			return ;
+		      // error
+		      else
+			disconnect(fd);
+		    }
+		} catch (...) {}
 	}
 
 	size_t Server::bytesAvailables(int fd)
@@ -283,9 +294,13 @@ namespace Socket
 
 		prefetch_data(fd);
 
-		Server_Client &c = getClientByFd(fd);
+		try {
+		  Server_Client &c = getClientByFd(fd);
 
-		return c.internal_read_buffer.size();
+		  return c.internal_read_buffer.size();
+		} catch (...) {
+		  return 0;
+		}
 	}
 
 	void Server::initSSL()
@@ -325,26 +340,30 @@ namespace Socket
 		if (!isConnected(fd))
 			return false;
 
-		Server_Client &c = getClientByFd(fd);
+		try {
+		  Server_Client &c = getClientByFd(fd);
 
-		if (!c.ssl)
-		{
-			c.ssl = SSL_new(_ctx);
-			SSL_set_fd(c.ssl, c.fd);
-		}
-		if (!c.connected)
-		{
-			int err = SSL_accept(c.ssl);
-			if (err > 0)
+		  if (!c.ssl)
+		    {
+		      c.ssl = SSL_new(_ctx);
+		      SSL_set_fd(c.ssl, c.fd);
+		    }
+		  if (!c.connected)
+		    {
+		      int err = SSL_accept(c.ssl);
+		      if (err > 0)
 			{
-				c.connected = true; // SSL authentified
-				if (_OnConnect)
-					_OnConnect(*this, fd);
-				return true;
+			  c.connected = true; // SSL authentified
+			  if (_OnConnect)
+			    _OnConnect(*this, fd);
+			  return true;
 			}
-			else
-				ERR_print_errors_fp(stderr);
-			return false;
+		      else
+			ERR_print_errors_fp(stderr);
+		      return false;
+		    }
+		} catch (...) {
+		  return false;
 		}
 	}
 
@@ -357,7 +376,6 @@ namespace Socket
 
 	Server_Client &Server::getClientByFd(int fd)
 	{
-
 		return _clients.at(fd);
 	}
 
