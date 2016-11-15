@@ -24,13 +24,16 @@ namespace spider
   class PacketSerializer
   {
   public:
-    PacketSerializer(unsigned long long size, int id, data data_)
-    {
-      _packaheHeader.magicNumber = SEND;
-      _packaheHeader.size = size;
-      _packaheHeader.id = id;
-      _data = data_;
-    }
+	  PacketSerializer(unsigned long long size, int id, data data_, bool answer = false)
+	  {
+		  if (answer)
+			  _packaheHeader.magicNumber = REC;
+		  else
+			  _packaheHeader.magicNumber = SEND;
+		  _packaheHeader.size = size;
+		  _packaheHeader.id = id;
+		  _data = data_;
+	  }
 
     //getter
     int	getPacketSize() const

@@ -48,6 +48,12 @@ namespace spider
     {
       return (_data);
     }
+
+	char const *getAnswerPacketType()
+	{
+		return (_data + sizeof(int));
+	}
+
     void printPacketType()
     {
       std::cout << _data[0] << _data[1] << _data[2] << std::endl;
